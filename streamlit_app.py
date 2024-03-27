@@ -107,7 +107,7 @@ def main():
         
         # Convert JSON-LD output to a string to display in text area (for preview)
         jsonld_str = json.dumps(jsonld_output, indent=4)
-        st.text_area("JSON-LD Output", jsonld_str, height=300)
+        st.text_area("JSON-LD Output", jsonld_str, height=3000)
         
         # Convert JSON-LD output to a downloadable file
         to_download = BytesIO(jsonld_str.encode())
