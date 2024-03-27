@@ -3,12 +3,20 @@ import pandas as pd
 import json
 from io import BytesIO
 
-markdown_content = """
-# Excel to JSON-LD converter
-Ontologizing your metadata can significantly enhance the interoperability of data across various research groups. To learn more about ontologizing your metadata, we invite you to visit our page on [ontologizing metadata](https://github.com/ord-premise/interoperability-guidelines/tree/main). While the benefits of this process are clear, it can often be a daunting task in practice. With this in mind, we've developed an Excel to JSON-LD web application designed to streamline and expedite this intricate task, making it more manageable for you and your team.
+markdown_content = """ 
+Ontologizing your metadata can significantly enhance the interoperability of data across various research groups.
+To learn more about ontologizing your metadata, we invite you to visit our page on
+[ontologizing metadata](https://github.com/ord-premise/interoperability-guidelines/tree/main). 
+While the benefits of this process are clear, it can often be a daunting task in practice. 
+With this in mind, we've developed an BattINFO converter web application designed to streamline and expedite this intricate task,
+making it more manageable for you and your team.
+
+BattINFO converter helps you ontologize metadata for coin cell battery based on [BattINFO](https://big-map.github.io/BattINFO/index.html) ontology. 
 
 # Usage
-To use our Excel to JSON-LD converter, fill out the metadata Excel file (Battery_schemas.xlsx) in the specified value column. It is perfectly acceptable if not all rows are filled in; leaving some rows empty does not affect the script's operation. Then, launch our [Excel to JSON-LD app](https://testxlsconv.streamlit.app/) and upload the completed metadata Excel file. Our application will efficiently convert your metadata into a JSON-LD file.
+To use our Excel to JSON-LD converter, fill out the [metadata Excel file](https://drive.switch.ch/index.php/s/FUDeeav6Adf06iU) in the specified value column.
+It is perfectly acceptable if not all rows are filled in; leaving some rows empty does not affect the script's operation.
+Simply upload the filled Excel metadata file and our BattINFO converter will convert it into JSON-LD file.
 
 # Authors
 [Nukorn Plainpan](https://github.com/NukP)  
@@ -18,15 +26,18 @@ Corsin Battaglia
 principal investigator
 
 # Acknowledgement 
-This Excel metadata for coin cell battery file and Excel to JSON-LD converter web application was developed at Material for Energy Conversion lab, Swiss Federal Laboratories for Materials Science and Technology (Empa). 
+BattINFO converter web application was developed at Empa, Swiss Federal Laboratories for Materials Science and Technology, Material for Energy Conversion lab.
 
-This work has been developed under the following project: 
+
+This work has been developed under the following project and funding agencies: 
 - [PREMISE](https://github.com/ord-premise)  
-  ![image](https://github.com/ord-premise/metadata-batteries/assets/45081142/74640b5c-ee94-41e1-9acd-fa47da866fe8)
   
 - [Battery 2030+](https://battery2030.eu/)  
-<img src="https://battery2030.eu/wp-content/uploads/2021/08/battery2030-logo-white-text-B.png" width="300">
+
+
 """
+
+image_url = 'https://github-production-user-asset-6210df.s3.amazonaws.com/127328032/317328628-5433e9f3-78f0-4953-9ee3-37c41345d6fa.PNG?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20240327%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240327T152645Z&X-Amz-Expires=300&X-Amz-Signature=a330af541a6c13848917222843b2f3f1166c7baa626e83779fd08a647ca1d126&X-Amz-SignedHeaders=host&actor_id=127328032&key_id=0&repo_id=740972520'
 
 
 def create_jsonld_with_conditions(schemas, item_id_map, connector_id_map):
@@ -96,10 +107,9 @@ def convert_excel_to_jsonld(excel_file):
     return jsonld_output
 
 def main():
-    st.markdown(markdown_content, unsafe_allow_html=True)
-    st.title("Excel to JSON-LD Converter")
+    st.image(image_url)
     
-    uploaded_file = st.file_uploader("Choose an Excel file", type=['xlsx'])
+    uploaded_file = st.file_uploader("Upload your metadata Excel file here", type=['xlsx'])
     
     if uploaded_file is not None:
         # Convert the uploaded Excel file to JSON-LD
@@ -115,6 +125,11 @@ def main():
                            data=to_download,
                            file_name="converted.jsonld",
                            mime="application/json")
+    
+    st.markdown(markdown_content, unsafe_allow_html=True)
+    st.image('https://github-production-user-asset-6210df.s3.amazonaws.com/127328032/317348881-e18d184c-a055-428a-8422-895336b20e92.PNG?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20240327%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240327T161636Z&X-Amz-Expires=300&X-Amz-Signature=c437e068bfeea018b56c513d9bb3c92a13861b9b580db823d6b883c2d40922a5&X-Amz-SignedHeaders=host&actor_id=127328032&key_id=0&repo_id=777829442', width=700)
+
+
 
 if __name__ == "__main__":
     main()
