@@ -25,7 +25,7 @@ This work has been developed under the following project:
   ![image](https://github.com/ord-premise/metadata-batteries/assets/45081142/74640b5c-ee94-41e1-9acd-fa47da866fe8)
   
 - [Battery 2030+](https://battery2030.eu/)  
-![image](https://battery2030.eu/wp-content/uploads/2021/08/battery2030-logo-white-text-B.png)
+<img src="https://battery2030.eu/wp-content/uploads/2021/08/battery2030-logo-white-text-B.png" width="300">
 """
 
 
@@ -96,7 +96,7 @@ def convert_excel_to_jsonld(excel_file):
     return jsonld_output
 
 def main():
-    st.markdown(markdown_content)
+    st.markdown(markdown_content, unsafe_allow_html=True)
     st.title("Excel to JSON-LD Converter")
     
     uploaded_file = st.file_uploader("Choose an Excel file", type=['xlsx'])
