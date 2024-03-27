@@ -3,6 +3,32 @@ import pandas as pd
 import json
 from io import BytesIO
 
+markdown_content = """
+# Excel to JSON-LD converter
+Ontologizing your metadata can significantly enhance the interoperability of data across various research groups. To learn more about ontologizing your metadata, we invite you to visit our page on [ontologizing metadata](https://github.com/ord-premise/interoperability-guidelines/tree/main). While the benefits of this process are clear, it can often be a daunting task in practice. With this in mind, we've developed an Excel to JSON-LD web application designed to streamline and expedite this intricate task, making it more manageable for you and your team.
+
+# Usage
+To use our Excel to JSON-LD converter, fill out the metadata Excel file (Battery_schemas.xlsx) in the specified value column. It is perfectly acceptable if not all rows are filled in; leaving some rows empty does not affect the script's operation. Then, launch our [Excel to JSON-LD app](https://testxlsconv.streamlit.app/) and upload the completed metadata Excel file. Our application will efficiently convert your metadata into a JSON-LD file.
+
+# Authors
+[Nukorn Plainpan](https://github.com/NukP)  
+Postdoctoral researcher
+
+Corsin Battaglia  
+principal investigator
+
+# Acknowledgement 
+This Excel metadata for coin cell battery file and Excel to JSON-LD converter web application was developed at Material for Energy Conversion lab, Swiss Federal Laboratories for Materials Science and Technology (Empa). 
+
+This work has been developed under the following project: 
+- [PREMISE](https://github.com/ord-premise)  
+  ![image](https://github.com/ord-premise/metadata-batteries/assets/45081142/74640b5c-ee94-41e1-9acd-fa47da866fe8)
+  
+- [Battery 2030+](https://battery2030.eu/)  
+![image](https://battery2030.eu/wp-content/uploads/2021/08/battery2030-logo-white-text-B.png)
+"""
+
+
 def create_jsonld_with_conditions(schemas, item_id_map, connector_id_map):
     jsonld = {
         "@context": {
@@ -70,6 +96,7 @@ def convert_excel_to_jsonld(excel_file):
     return jsonld_output
 
 def main():
+    st.markdown(markdown_content)
     st.title("Excel to JSON-LD Converter")
     
     uploaded_file = st.file_uploader("Choose an Excel file", type=['xlsx'])
