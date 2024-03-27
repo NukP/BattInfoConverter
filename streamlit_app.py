@@ -37,7 +37,7 @@ This work has been developed under the following project and funding agencies:
 
 """
 
-image_url = 'https://github-production-user-asset-6210df.s3.amazonaws.com/127328032/317328628-5433e9f3-78f0-4953-9ee3-37c41345d6fa.PNG?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20240327%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240327T152645Z&X-Amz-Expires=300&X-Amz-Signature=a330af541a6c13848917222843b2f3f1166c7baa626e83779fd08a647ca1d126&X-Amz-SignedHeaders=host&actor_id=127328032&key_id=0&repo_id=740972520'
+image_url = 'https://drive.switch.ch/index.php/apps/files_sharing/ajax/publicpreview.php?x=2888&y=920&a=true&file=BattINFO%2520converter%2520logo.PNG&t=bxd8AZRM6CDTFeM&scalingup=0'
 
 
 def create_jsonld_with_conditions(schemas, item_id_map, connector_id_map):
@@ -127,7 +127,7 @@ def main():
                            mime="application/json")
     
     st.markdown(markdown_content, unsafe_allow_html=True)
-    st.image('https://github-production-user-asset-6210df.s3.amazonaws.com/127328032/317348881-e18d184c-a055-428a-8422-895336b20e92.PNG?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20240327%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20240327T161636Z&X-Amz-Expires=300&X-Amz-Signature=c437e068bfeea018b56c513d9bb3c92a13861b9b580db823d6b883c2d40922a5&X-Amz-SignedHeaders=host&actor_id=127328032&key_id=0&repo_id=777829442', width=700)
+    st.image('https://drive.switch.ch/index.php/apps/files_sharing/ajax/publicpreview.php?x=2888&y=920&a=true&file=Funders.PNG&t=lgmDOqzgpyFi5Gh&scalingup=0', width=700)
 
 
 
