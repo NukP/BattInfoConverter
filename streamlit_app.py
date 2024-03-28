@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import json
+import os
 from io import BytesIO
 
 markdown_content = """ 
@@ -105,19 +106,23 @@ def main():
     uploaded_file = st.file_uploader("Upload your metadata Excel file here", type=['xlsx'])
     
     if uploaded_file is not None:
+        # Extract the base name of the file (without the extension)
+        base_name = os.path.splitext(uploaded_file.name)[0]
+        
         # Convert the uploaded Excel file to JSON-LD
         jsonld_output = convert_excel_to_jsonld(uploaded_file)
+        jsonld_str = json.dumps(jsonld_output, indent=4)
+        
+        # Download button
+        to_download = BytesIO(jsonld_str.encode())
+        output_file_name = f"BattINFO_converter_{base_name}.json"  
+        st.download_button(label="Download JSON-LD",
+                        data=to_download,
+                        file_name=output_file_name,
+                        mime="application/json")
         
         # Convert JSON-LD output to a string to display in text area (for preview)
-        jsonld_str = json.dumps(jsonld_output, indent=4)
-        st.text_area("JSON-LD Output", jsonld_str, height=3000)
-        
-        # Convert JSON-LD output to a downloadable file
-        to_download = BytesIO(jsonld_str.encode())
-        st.download_button(label="Download JSON-LD",
-                           data=to_download,
-                           file_name="converted.jsonld",
-                           mime="application/json")
+        st.text_area("JSON-LD Output", jsonld_str, height=300)
     
     st.markdown(markdown_content, unsafe_allow_html=True)
     st.image('https://drive.switch.ch/index.php/apps/files_sharing/ajax/publicpreview.php?x=2888&y=920&a=true&file=Funders.PNG&t=lgmDOqzgpyFi5Gh&scalingup=0', width=700)
