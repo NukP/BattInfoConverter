@@ -18,13 +18,6 @@ To use our Excel to JSON-LD converter, fill out the [metadata Excel file](https:
 It is perfectly acceptable if not all rows are filled in; leaving some rows empty does not affect the script's operation.
 Simply upload the filled Excel metadata file and our BattINFO converter will convert it into JSON-LD file.
 
-# Authors
-[Nukorn Plainpan](https://github.com/NukP)  
-Postdoctoral researcher
-
-Corsin Battaglia  
-principal investigator
-
 # Acknowledgement 
 BattINFO converter web application was developed at Empa, Swiss Federal Laboratories for Materials Science and Technology, Material for Energy Conversion lab.
 
