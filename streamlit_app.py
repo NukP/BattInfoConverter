@@ -15,7 +15,7 @@ making it more manageable for you and your team.
 BattINFO converter helps you ontologize metadata for coin cell battery based on [BattINFO](https://big-map.github.io/BattINFO/index.html) ontology. 
 
 # Usage
-To use our Excel to JSON-LD converter, fill out the [metadata Excel file](https://drive.switch.ch/index.php/s/FUDeeav6Adf06iU) in the specified value column.
+To use our Excel to JSON-LD converter, fill out the [metadata Excel file](https://drive.switch.ch/index.php/s/CNav0yDkRgg2KOZ) in the specified value column.
 It is perfectly acceptable if not all rows are filled in; leaving some rows empty does not affect the script's operation.
 Simply upload the filled Excel metadata file and our BattINFO converter will convert it into JSON-LD file.
 
