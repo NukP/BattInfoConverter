@@ -64,7 +64,7 @@ def create_jsonld_with_conditions(schemas, item_map, unit_map, context_toplevel,
                     if part in item_map:
                         current_level[part] = {"@type": item_map[part]['Key']}
                     else:
-                        raise ValueError(f"Connector or item '{part}' is not defined. Please check the schema.")
+                        raise ValueError(f"Connector or item '{part}' is not defined in any relevant sheet.")
 
             if not is_last:
                 current_level = current_level[part]
@@ -72,6 +72,8 @@ def create_jsonld_with_conditions(schemas, item_map, unit_map, context_toplevel,
                 # Handle the unit and value structure for the last item
                 final_type = item_map.get(part, {}).get('Key', '')
                 if unit != 'No Unit':
+                    if pd.isna(unit):
+                        raise ValueError(f"The value '{value}' is filled in the wrong row, please check the schemas")
                     unit_info = unit_map[unit]
                     current_level[part] = {
                         "@type": final_type,
@@ -95,7 +97,9 @@ def create_jsonld_with_conditions(schemas, item_map, unit_map, context_toplevel,
     for _, row in schemas.iterrows():
         if pd.isna(row['Value']) or row['Ontology link'] == 'NotOntologize':
             continue
-        
+        if pd.isna(row['Unit']):
+            raise ValueError(f"The value '{row['Value']}' is filled in the wrong row, please check the schemas")
+
         ontology_path = row['Ontology link'].split('-')
         add_to_structure(ontology_path, row['Value'], row['Unit'])
 
@@ -113,6 +117,7 @@ def convert_excel_to_jsonld(excel_file):
     jsonld_output = create_jsonld_with_conditions(schemas, item_map, unit_map, context_toplevel, context_connector)
     
     return jsonld_output
+
 
 
 def main():
