@@ -54,7 +54,9 @@ def create_jsonld_with_conditions(schemas, item_map, unit_map, context_toplevel,
     def add_to_structure(path, value, unit):
         current_level = jsonld["Battery"]
         # Iterate through the path to create or navigate the structure
-        for idx, part in enumerate(path[1:-1]):
+        for idx, part in enumerate(path[1:]):
+            is_last = idx == len(path) - 2  # Check if current part is the last in the path
+
             if part not in current_level:
                 if part in connectors:
                     current_level[part] = {}
@@ -62,32 +64,32 @@ def create_jsonld_with_conditions(schemas, item_map, unit_map, context_toplevel,
                     if part in item_map:
                         current_level[part] = {"@type": item_map[part]['Key']}
                     else:
-                        raise ValueError(f"Connector '{part}' not defined in any relevant sheet.")
-            current_level = current_level[part]
-        
-        final_part = path[-1]
-        final_type = item_map.get(final_part, {}).get('Key', '')
-        
-        # Handle the unit and value structure
-        if unit != 'No Unit':
-            unit_info = unit_map[unit]
-            current_level[final_part] = {
-                "@type": final_type,
-                "hasNumberValue": {
-                    "@type": "emmo:hasNumberValue",
-                    "value": value,
-                    "unit": {
-                        "label": unit_info['Label'],
-                        "symbol": unit_info['Symbol'],
-                        "@type": unit_info['Key']
+                        raise ValueError(f"Connector or item '{part}' is not defined. Please check the schema.")
+
+            if not is_last:
+                current_level = current_level[part]
+            else:
+                # Handle the unit and value structure for the last item
+                final_type = item_map.get(part, {}).get('Key', '')
+                if unit != 'No Unit':
+                    unit_info = unit_map[unit]
+                    current_level[part] = {
+                        "@type": final_type,
+                        "hasNumberValue": {
+                            "@type": "emmo:hasNumberValue",
+                            "value": value,
+                            "unit": {
+                                "label": unit_info['Label'],
+                                "symbol": unit_info['Symbol'],
+                                "@type": unit_info['Key']
+                            }
+                        }
                     }
-                }
-            }
-        else:
-            current_level[final_part] = {
-                "@type": final_type,
-                "value": value
-            }
+                else:
+                    current_level[part] = {
+                        "@type": final_type,
+                        "value": value
+                    }
 
     # Process each schema entry to construct the JSON-LD output
     for _, row in schemas.iterrows():
