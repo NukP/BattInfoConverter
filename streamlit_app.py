@@ -45,16 +45,24 @@ def create_jsonld_with_conditions(schemas, item_map, unit_map, context_toplevel,
     for _, row in context_toplevel.iterrows():
         jsonld["@context"][row['Item']] = row['Key']
     
+    connectors = set()
     for _, row in context_connector.iterrows():
         jsonld["@context"][row['Item']] = row['Key']
+        connectors.add(row['Item'])  # Track connectors to avoid redefining types
 
     # Helper function to add nested structures with type annotations
     def add_to_structure(path, value, unit):
         current_level = jsonld["Battery"]
         # Iterate through the path to create or navigate the structure
-        for part in path[1:-1]:
+        for idx, part in enumerate(path[1:-1]):
             if part not in current_level:
-                current_level[part] = {"@type": item_map.get(part, {}).get('Key', '')}
+                if part in connectors:
+                    current_level[part] = {}
+                else:
+                    if part in item_map:
+                        current_level[part] = {"@type": item_map[part]['Key']}
+                    else:
+                        raise ValueError(f"Connector '{part}' not defined in any relevant sheet.")
             current_level = current_level[part]
         
         final_part = path[-1]
@@ -105,7 +113,6 @@ def convert_excel_to_jsonld(excel_file):
     return jsonld_output
 
 
-
 def main():
     st.image(image_url)
     
@@ -132,7 +139,6 @@ def main():
     
     st.markdown(markdown_content, unsafe_allow_html=True)
     st.image('https://drive.switch.ch/index.php/apps/files_sharing/ajax/publicpreview.php?x=2888&y=920&a=true&file=Funders.PNG&t=lgmDOqzgpyFi5Gh&scalingup=0', width=700)
-
 
 
 if __name__ == "__main__":
