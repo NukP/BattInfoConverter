@@ -33,72 +33,71 @@ This work has been developed under the following project and funding agencies:
 
 image_url = 'https://drive.switch.ch/index.php/apps/files_sharing/ajax/publicpreview.php?x=2888&y=920&a=true&file=BattINFO%2520converter%2520logo.PNG&t=bxd8AZRM6CDTFeM&scalingup=0'
 
-
-def create_jsonld_with_conditions(schemas, item_id_map, connector_id_map):
+def create_jsonld_with_conditions(schemas, item_id_map, unit_id_map, context_toplevel, context_connector):
     jsonld = {
-        "@context": {
-            "@vocab": "http://emmo.info/electrochemistry#",
-            "xsd": "http://www.w3.org/2001/XMLSchema#"
-        },
-        "@graph": []
+        "@context": {},
+        "Battery": {}
     }
 
-    top_level_items = {}
+    # Building the @context part
+    for _, row in context_toplevel.iterrows():
+        jsonld["@context"][row['Item']] = row['Key']
+    
+    for _, row in context_connector.iterrows():
+        jsonld["@context"][row['Item']] = row['Key']
+    
+    # Function to recursively create nested structure
+    def add_to_structure(path, value, unit):
+        current_level = jsonld["Battery"]
+        for part in path[:-1]:  # Navigate/create structure up to the last part
+            if part not in current_level:
+                current_level[part] = {}
+            current_level = current_level[part]
+        
+        final_part = path[-1]
+        if unit != 'No unit':
+            unit_info = unit_id_map.get(unit, {})
+            current_level[final_part] = {
+                "@type": item_id_map.get(final_part, {}).get('Key', ''),
+                "hasNumberValue": {
+                    "@type": "emmo:hasNumberValue",
+                    "value": value,
+                    "unit": {
+                        "label": unit_info.get('Label', ''),
+                        "symbol": unit_info.get('Symbol', ''),
+                        "@type": unit_info.get('Key', '')
+                    }
+                }
+            }
+        else:
+            current_level[final_part] = {
+                "@type": "string",
+                "value": value
+            }
 
+    # Building the Battery part
     for _, row in schemas.iterrows():
         if pd.isna(row['Value']) or row['Ontology link'] == 'NotOntologize':
-            continue  # Skip rows with empty value or 'NotOntologize' in Ontology link
-
-        ontology_links = row['Ontology link'].split('-')
-        if len(ontology_links) < 5:
-            continue  # Skip rows with insufficient parts in Ontology link
-
-        value = row['Value']
-        unit = row['Unit']
-
-        main_item = ontology_links[0]
-        relation = ontology_links[1]
-        sub_item = ontology_links[2]
-        property_relation = ontology_links[3]
-        property_item = ontology_links[4]
-
-        if main_item not in top_level_items:
-            top_level_items[main_item] = {
-                "@type": main_item,
-                relation: []
-            }
-            jsonld["@graph"].append(top_level_items[main_item])
-
-        sub_item_structure = {
-            "@type": sub_item,
-            property_relation: [{
-                "@type": property_item,
-                "hasValue": value,
-                "hasUnits": unit
-            }]
-        }
-
-        jsonld["@context"].update({
-            main_item: {"@id": item_id_map.get(main_item, ""), "@type": "@id"},
-            sub_item: {"@id": item_id_map.get(sub_item, ""), "@type": "@id"},
-            property_item: {"@id": item_id_map.get(property_item, ""), "@type": "@id"}
-        })
-
-        top_level_items[main_item][relation].append(sub_item_structure)
+            continue
+        
+        ontology_path = row['Ontology link'].split('-')
+        add_to_structure(ontology_path, row['Value'], row['Unit'])
 
     return jsonld
 
 def convert_excel_to_jsonld(excel_file):
-    # Assuming the Excel file has the necessary sheets named 'Schemas', 'Ontology - item', 'Ontology - Connector'
     excel_data = pd.ExcelFile(excel_file)
     
     schemas = pd.read_excel(excel_data, sheet_name='Schemas')
-    item_id_map = pd.read_excel(excel_data, sheet_name='Ontology - item').set_index('Item')['ID'].to_dict()
-    connector_id_map = pd.read_excel(excel_data, sheet_name='Ontology - Connector').set_index('Item')['ID'].to_dict()
+    item_id_map = pd.read_excel(excel_data, sheet_name='Ontology - Item').set_index('Item').to_dict(orient='index')
+    unit_id_map = pd.read_excel(excel_data, sheet_name='Ontology - Unit').set_index('Label').to_dict(orient='index')
+    context_toplevel = pd.read_excel(excel_data, sheet_name='@context-TopLevel')
+    context_connector = pd.read_excel(excel_data, sheet_name='@context-Connector')
 
-    jsonld_output = create_jsonld_with_conditions(schemas, item_id_map, connector_id_map)
+    jsonld_output = create_jsonld_with_conditions(schemas, item_id_map, unit_id_map, context_toplevel, context_connector)
     
     return jsonld_output
+
 
 def main():
     st.image(image_url)
