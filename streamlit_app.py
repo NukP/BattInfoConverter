@@ -6,7 +6,7 @@ from io import BytesIO
 import logging
 
 # Define the version of the app
-APP_VERSION = "1.0.0"
+APP_VERSION = "0.1.0"
 
 # Setup logging
 logging.basicConfig(filename='usage.log', level=logging.INFO, 
