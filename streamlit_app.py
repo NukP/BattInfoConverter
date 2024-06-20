@@ -18,10 +18,28 @@ making it more manageable for you and your team.
 
 BattINFO converter helps you ontologize metadata for coin cell battery based on [BattINFO](https://big-map.github.io/BattINFO/index.html) ontology. 
 
-# Usage
-To use our Excel to JSON-LD converter, fill out the [metadata Excel file](https://drive.switch.ch/index.php/s/CNav0yDkRgg2KOZ) in the specified value column.
-It is perfectly acceptable if not all rows are filled in; leaving some rows empty does not affect the script's operation.
-Simply upload the filled Excel metadata file and our BattINFO converter will convert it into JSON-LD file.
+ ## How to Fill Out the Excel metadata file
+
+1. **Essential Tabs**: The Excel file should contain the following essential tabs: `Schemas`, `Ontology - Item`, `@context-TopLevel`, and `Ontology - Unit`. These tabs are crucial for the functioning of the web app. Do not change their names.  
+2. **First Row**: Ensure that the first row of each tab contains the column names. These names are used as references by the app.  
+3. **Filling Data**: In the `Schemas` tab, fill in the following columns:  
+    - **Value**: Enter the metadata value. If the cell is empty, the script will skip this metadata item.  
+    - **Unit**: Specify the unit of the metadata. If the metadata item doesn't require a unit, enter "No Unit". Leaving this cell empty will cause an error.  
+    - **Ontology link**: Provide the ontology link. If you do not want to ontologize a particular row, enter "NotOntologize". To add a comment instead, enter "Comment".  
+
+## How to adapt the Excel metadata file for your own custom data
+
+
+1. **Adding New Ontology Terms**:
+    - Go to the website providing the ontology concept (e.g., BattInfo, Schema.org).
+    - In the `@context-TopLevel` tab, add the top-level URL of the ontology website.
+    - In the `Ontology - Item` tab, define the new ontology term. Use the `Item` column for the term and the `Key` column for the ontology reference (e.g., `schemas:identifier`).
+
+2. **Adding New Units**:
+    - In the `Ontology - Unit` tab, define the new unit. Include the `Item`, `Label`, and `Symbol` columns, along with the ontology reference in the `Key` column.
+
+3. **Adding New Rows**:  
+    - Add new rows to the `Schemas` tab (or remove existing rows) to include additional metadata items. Ensure that the `Ontology link` column references the new ontology terms and units.
 
 # Acknowledgement 
 BattINFO converter web application was developed at Empa, Swiss Federal Laboratories for Materials Science and Technology, Material for Energy Conversion lab.
