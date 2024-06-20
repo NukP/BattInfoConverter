@@ -3,14 +3,10 @@ import pandas as pd
 import json
 import os
 from io import BytesIO
-import logging
 
 # Define the version of the app
 APP_VERSION = "0.1.0"
 
-# Setup logging
-logging.basicConfig(filename='usage.log', level=logging.INFO, 
-                    format='%(asctime)s - %(message)s')
 
 markdown_content = """ 
 Ontologizing your metadata can significantly enhance the interoperability of data across various research groups.
@@ -140,9 +136,6 @@ def main():
         # Convert the uploaded Excel file to JSON-LD
         jsonld_output = convert_excel_to_jsonld(uploaded_file)
         jsonld_str = json.dumps(jsonld_output, indent=4)
-        
-        # Log the usage
-        logging.info(f"File uploaded: {uploaded_file.name}, converted successfully.")
 
         # Download button
         to_download = BytesIO(jsonld_str.encode())
