@@ -81,8 +81,8 @@ def create_jsonld_with_conditions(schemas, item_map, unit_map, context_toplevel,
                     unit_info = unit_map[unit]
                     current_level[part] = {
                         "@type": final_type,
-                        "hasNumberValue": {
-                            "@type": "emmo:hasNumberValue",
+                        "hasNumericalValue": {
+                            "@type": "emmo:hasNumericalValue",
                             "value": value,
                             "unit": {
                                 "label": unit_info['Label'],
