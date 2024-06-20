@@ -83,23 +83,31 @@ def create_jsonld_with_conditions(schemas, item_map, unit_map, context_toplevel,
                     if pd.isna(unit):
                         raise ValueError(f"The value '{value}' is filled in the wrong row, please check the schemas")
                     unit_info = unit_map[unit]
-                    current_level[part] = {
-                        "@type": final_type,
-                        "hasNumericalValue": {
-                            "@type": "emmo:hasNumericalValue",
-                            "value": value,
-                            "unit": {
-                                "label": unit_info['Label'],
-                                "symbol": unit_info['Symbol'],
-                                "@type": unit_info['Key']
-                            }
+                    if part not in current_level:
+                        current_level[part] = {
+                            "@type": final_type,
+                            "hasNumericalPart": []
                         }
-                    }
+                    if "hasNumericalPart" not in current_level[part]:
+                        current_level[part]["hasNumericalPart"] = []
+                    current_level[part]["hasNumericalPart"].append({
+                        "@type": "emmo:Real",
+                        "hasNumericalValue": value,
+                        "unit": {
+                            "hasMeasurementUnit": unit_info['Key'],
+                            "label": unit_info['Label'],
+                            "symbol": unit_info['Symbol']
+                        }
+                    })
                 else:
-                    current_level[part] = {
-                        "@type": final_type,
-                        "value": value
-                    }
+                    if part not in current_level:
+                        current_level[part] = {
+                            "@type": final_type,
+                            "value": []
+                        }
+                    if "value" not in current_level[part]:
+                        current_level[part]["value"] = []
+                    current_level[part]["value"].append(value)
 
     # Process each schema entry to construct the JSON-LD output
     for _, row in schemas.iterrows():
@@ -118,6 +126,7 @@ def create_jsonld_with_conditions(schemas, item_map, unit_map, context_toplevel,
     jsonld["Comment"]["comments"]["BattInfoConverter version"] = APP_VERSION
 
     return jsonld
+
 
 
 
