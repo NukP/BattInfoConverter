@@ -114,6 +114,9 @@ def create_jsonld_with_conditions(schemas, item_map, unit_map, context_toplevel,
         ontology_path = row['Ontology link'].split('-')
         add_to_structure(ontology_path, row['Value'], row['Unit'])
 
+    # Add the BattInfoConverter version comment
+    jsonld["Comment"]["comments"]["BattInfoConverter version"] = APP_VERSION
+
     return jsonld
 
 
