@@ -40,6 +40,10 @@ image_url = 'https://drive.switch.ch/index.php/apps/files_sharing/ajax/publicpre
 def create_jsonld_with_conditions(schemas, item_map, unit_map, context_toplevel, context_connector):
     jsonld = {
         "@context": {},
+        "Comment": {
+            "@type": "rdfs:comment",
+            "comments": []
+        },
         "Battery": {
             "@type": "battery:Battery"
         }
@@ -101,6 +105,9 @@ def create_jsonld_with_conditions(schemas, item_map, unit_map, context_toplevel,
     for _, row in schemas.iterrows():
         if pd.isna(row['Value']) or row['Ontology link'] == 'NotOntologize':
             continue
+        if row['Ontology link'] == 'Comment':
+            jsonld["Comment"]["comments"].append(f"{row['Metadata']}:{row['Value']}")
+            continue
         if pd.isna(row['Unit']):
             raise ValueError(f"The value '{row['Value']}' is filled in the wrong row, please check the schemas")
 
@@ -108,6 +115,7 @@ def create_jsonld_with_conditions(schemas, item_map, unit_map, context_toplevel,
         add_to_structure(ontology_path, row['Value'], row['Unit'])
 
     return jsonld
+
 
 def convert_excel_to_jsonld(excel_file):
     excel_data = pd.ExcelFile(excel_file)
