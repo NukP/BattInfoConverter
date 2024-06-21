@@ -141,7 +141,7 @@ def create_jsonld_with_conditions(schemas, item_map, unit_map, context_toplevel,
         add_to_structure(ontology_path, row['Value'], row['Unit'])
 
     # Add the BattInfoConverter version comment
-    jsonld["Comment"]["comments"]["BattInfoConverter version"] = APP_VERSION
+    jsonld["Comment"]["comments"]["BattINFO Converter version"] = APP_VERSION
 
     return jsonld
 
