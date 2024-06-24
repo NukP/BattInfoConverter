@@ -49,18 +49,23 @@ Here you will find an Excel file template that you can fill out with your metada
     - Add new rows to the `Schemas` tab (or remove existing rows) to include additional metadata items. Ensure that the `Ontology link` column references the new ontology terms and units.
 
 # Acknowledgement 
-BattINFO converter web application was developed at Empa, Swiss Federal Laboratories for Materials Science and Technology, Material for Energy Conversion lab.
+BattINFO converter web application was developed at [Empa](https://www.empa.ch/), Swiss Federal Laboratories for Materials Science and Technology in [Material for Energy Conversion lab](https://www.empa.ch/web/s501).  
+
+
+We acknowledge stimulating discussions and support from Dr Simon Clark, SINTEF  
 
 
 This work has been developed under the following project and funding agencies: 
-- [PREMISE](https://github.com/ord-premise)  
+- [PREMISE](https://ord-premise.org/)  
   
-- [Battery 2030+](https://battery2030.eu/)  
+- [Battery 2030+](https://battery2030.eu/)
+
+- [Big-Map project](https://www.big-map.eu/)
 
 
 """
 
-image_url = 'https://drive.switch.ch/index.php/apps/files_sharing/ajax/publicpreview.php?x=2888&y=920&a=true&file=BattINFO%2520converter%2520logo.PNG&t=bxd8AZRM6CDTFeM&scalingup=0'
+image_url = 'https://raw.githubusercontent.com/NukP/xls_convert/fix_oslo2/BattInfoCOnverter.png'
 
 def create_jsonld_with_conditions(schemas, item_map, unit_map, context_toplevel, context_connector):
     jsonld = {
@@ -195,7 +200,7 @@ def main():
         st.text_area("JSON-LD Output", jsonld_str, height=300)
     
     st.markdown(markdown_content, unsafe_allow_html=True)
-    st.image('https://drive.switch.ch/index.php/apps/files_sharing/ajax/publicpreview.php?x=2888&y=920&a=true&file=Funders.PNG&t=lgmDOqzgpyFi5Gh&scalingup=0', width=700)
+    st.image('https://raw.githubusercontent.com/NukP/xls_convert/fix_oslo2/sponsor.png', width=700)
 
 
 if __name__ == "__main__":
