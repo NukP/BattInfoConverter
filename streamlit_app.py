@@ -18,6 +18,12 @@ making it more manageable for you and your team.
 
 BattINFO converter helps you ontologize metadata for coin cell battery based on [BattINFO](https://big-map.github.io/BattINFO/index.html) ontology. 
 
+## Excel metadata files
+Here you will find an Excel file template that you can fill out with your metadata. We will add more template for other cell types in the future. Be sure to check out!
+### Blank Excel metadata file
+[Coin cell battery schemas version 0.1.0](https://drive.switch.ch/index.php/s/4S9Ft8hwNz31YMQ) 
+### Example filled out Excel metadata file
+
  ## How to Fill Out the Excel metadata file
 
 1. **Essential Tabs**: The Excel file should contain the following essential tabs: `Schemas`, `Ontology - Item`, `@context-TopLevel`, and `Ontology - Unit`. These tabs are crucial for the functioning of the web app. Do not change their names.  
