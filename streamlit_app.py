@@ -176,9 +176,9 @@ def convert_excel_to_jsonld(excel_file):
 def main():
     st.image(image_url)
     
-    st.markdown(f"### App Version: {APP_VERSION}")
+    st.markdown(f"__App Version: {APP_VERSION}__")
     
-    uploaded_file = st.file_uploader("Upload your metadata Excel file here", type=['xlsx', 'xlsm'])
+    uploaded_file = st.file_uploader("__Upload your metadata Excel file here__", type=['xlsx', 'xlsm'])
     
     if uploaded_file is not None:
         # Extract the base name of the file (without the extension)
