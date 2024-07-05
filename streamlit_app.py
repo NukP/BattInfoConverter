@@ -69,7 +69,7 @@ image_url = 'https://raw.githubusercontent.com/NukP/xls_convert/fix_oslo2/BattIn
 
 def get_information_value(row_name, df, col_locator='Item'):
     """
-    Get the value of a specific key in the information sheet
+    Return the value of a column "Key" at the row where the column "Item" is equal to row_name
     """
     return df.loc[df[col_locator] == row_name, 'Key'].values[0]
 
