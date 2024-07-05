@@ -67,19 +67,19 @@ This work has been developed under the following project and funding agencies:
 
 image_url = 'https://raw.githubusercontent.com/NukP/xls_convert/fix_oslo2/BattInfoCOnverter.png'
 
-def get_information_value(df, col_locator, col_key):
+def get_information_value(row_name, df, col_locator='Item'):
     """
     Get the value of a specific key in the information sheet
     """
-    return df.loc[df[col_locator] == col_key, 'Key'].values[0]
+    return df.loc[df[col_locator] == row_name, 'Key'].values[0]
 
 
 
 def create_jsonld_with_conditions(schema, info, item_map, unit_map, context_toplevel, context_connector):
     jsonld = {
         "@context": ["https://w3id.org/emmo/domain/battery/context", {}],
-        "@type" : get_information_value(info, 'Item', 'Cell type'),
-        "schema:version": str(get_information_value(info, 'Item', 'BattINFO CoinCellSchema version')),
+        "@type" : get_information_value(row_name = 'Cell type', df=info),
+        "schema:version": str(get_information_value(row_name='BattINFO CoinCellSchema version', df=info)),
         "Comment": {
             "@type": "rdfs:comment",
             "comments": {}
