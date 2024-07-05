@@ -69,7 +69,7 @@ image_url = 'https://raw.githubusercontent.com/NukP/xls_convert/fix_oslo2/BattIn
 
 def create_jsonld_with_conditions(schemas, item_map, unit_map, context_toplevel, context_connector):
     jsonld = {
-        "@context": {},
+         "@context": ["https://w3id.org/emmo/domain/battery/context", {}],
         "Comment": {
             "@type": "rdfs:comment",
             "comments": {}
@@ -81,11 +81,11 @@ def create_jsonld_with_conditions(schemas, item_map, unit_map, context_toplevel,
 
     # Build the @context part
     for _, row in context_toplevel.iterrows():
-        jsonld["@context"][row['Item']] = row['Key']
+        jsonld["@context"][1][row['Item']] = row['Key']
     
     connectors = set()
     for _, row in context_connector.iterrows():
-        jsonld["@context"][row['Item']] = row['Key']
+        jsonld["@context"][1][row['Item']] = row['Key']
         connectors.add(row['Item'])  # Track connectors to avoid redefining types
 
     # Helper function to add nested structures with type annotations
