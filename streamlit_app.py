@@ -89,8 +89,9 @@ def create_jsonld_with_conditions(schema, info, item_map, unit_map, context_topl
     
     connectors = set()
     for _, row in context_connector.iterrows():
-        jsonld["@context"][1][row['Item']] = row['Key']
+        #jsonld["@context"][1][row['Item']] = row['Key']
         connectors.add(row['Item'])  # Track connectors to avoid redefining types
+
 
     # Helper function to add nested structures with type annotations
     def add_to_structure(path, value, unit):
