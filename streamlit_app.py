@@ -21,15 +21,15 @@ BattINFO converter helps you ontologize metadata for coin cell battery based on 
 ## Excel metadata files
 Here you will find an Excel file template that you can fill out with your metadata. We will add more template for other cell types in the future. Be sure to check out!
 ### Blank Excel metadata file
-[Coin cell battery schemas version 0.1.0](https://raw.githubusercontent.com/NukP/xls_convert/fix_oslo2/Excel%20for%20reference/CoinCellBattery_Schemas_version_010.xlsx) 
+[Coin cell battery schema version 0.1.0](https://raw.githubusercontent.com/NukP/xls_convert/fix_oslo2/Excel%20for%20reference/CoinCellBattery_Schemas_version_010.xlsx) 
 ### Example filled out Excel metadata file
-[Example-filled Coin cell battery schemas version 0.1.0](https://raw.githubusercontent.com/NukP/xls_convert/fix_oslo2/Excel%20for%20reference/Example_CoinCellBattery_Schemas_version_010.xlsx)
+[Example-filled Coin cell battery schema version 0.1.0](https://raw.githubusercontent.com/NukP/xls_convert/fix_oslo2/Excel%20for%20reference/Example_CoinCellBattery_Schemas_version_010.xlsx)
 
  ## How to Fill Out the Excel metadata file
 
-1. **Essential Tabs**: The Excel file should contain the following essential tabs: `Schemas`, `Ontology - Item`, `@context-TopLevel`, and `Ontology - Unit`. These tabs are crucial for the functioning of the web app. Do not change their names.  
+1. **Essential Tabs**: The Excel file should contain the following essential tabs: `Schema`, `Ontology - Item`, `@context-TopLevel`, and `Ontology - Unit`. These tabs are crucial for the functioning of the web app. Do not change their names.  
 2. **First Row**: Ensure that the first row of each tab contains the column names. These names are used as references by the app.  
-3. **Filling Data**: In the `Schemas` tab, fill in the following columns:  
+3. **Filling Data**: In the `Schema` tab, fill in the following columns:  
     - **Value**: Enter the metadata value. If the cell is empty, the script will skip this metadata item.  
     - **Unit**: Specify the unit of the metadata. If the metadata item doesn't require a unit, enter "No Unit". Leaving this cell empty will cause an error.  
     - **Ontology link**: Provide the ontology link. If you do not want to ontologize a particular row, enter "NotOntologize". To add a comment instead, enter "Comment".  
@@ -46,7 +46,7 @@ Here you will find an Excel file template that you can fill out with your metada
     - In the `Ontology - Unit` tab, define the new unit. Include the `Item`, `Label`, and `Symbol` columns, along with the ontology reference in the `Key` column.
 
 3. **Adding New Rows**:  
-    - Add new rows to the `Schemas` tab (or remove existing rows) to include additional metadata items. Ensure that the `Ontology link` column references the new ontology terms and units.
+    - Add new rows to the `Schema` tab (or remove existing rows) to include additional metadata items. Ensure that the `Ontology link` column references the new ontology terms and units.
 
 # Acknowledgement 
 BattINFO converter web application was developed at [Empa](https://www.empa.ch/), Swiss Federal Laboratories for Materials Science and Technology in [Material for Energy Conversion lab](https://www.empa.ch/web/s501).  
@@ -67,9 +67,9 @@ This work has been developed under the following project and funding agencies:
 
 image_url = 'https://raw.githubusercontent.com/NukP/xls_convert/fix_oslo2/BattInfoCOnverter.png'
 
-def create_jsonld_with_conditions(schemas, item_map, unit_map, context_toplevel, context_connector):
+def create_jsonld_with_conditions(schema, item_map, unit_map, context_toplevel, context_connector):
     jsonld = {
-         "@context": ["https://w3id.org/emmo/domain/battery/context", {}],
+        "@context": ["https://w3id.org/emmo/domain/battery/context", {}],
         "Comment": {
             "@type": "rdfs:comment",
             "comments": {}
@@ -111,7 +111,7 @@ def create_jsonld_with_conditions(schemas, item_map, unit_map, context_toplevel,
                 final_type = item_map.get(part, {}).get('Key', '')
                 if unit != 'No Unit':
                     if pd.isna(unit):
-                        raise ValueError(f"The value '{value}' is filled in the wrong row, please check the schemas")
+                        raise ValueError(f"The value '{value}' is filled in the wrong row, please check the schema")
                     unit_info = unit_map[unit]
                     if part not in current_level:
                         current_level[part] = {
@@ -140,14 +140,14 @@ def create_jsonld_with_conditions(schemas, item_map, unit_map, context_toplevel,
                     current_level[part]["value"].append(value)
 
     # Process each schema entry to construct the JSON-LD output
-    for _, row in schemas.iterrows():
+    for _, row in schema.iterrows():
         if pd.isna(row['Value']) or row['Ontology link'] == 'NotOntologize':
             continue
         if row['Ontology link'] == 'Comment':
             jsonld["Comment"]["comments"][row['Metadata']] = row['Value']
             continue
         if pd.isna(row['Unit']):
-            raise ValueError(f"The value '{row['Value']}' is filled in the wrong row, please check the schemas")
+            raise ValueError(f"The value '{row['Value']}' is filled in the wrong row, please check the schema")
 
         ontology_path = row['Ontology link'].split('-')
         add_to_structure(ontology_path, row['Value'], row['Unit'])
@@ -163,13 +163,13 @@ def create_jsonld_with_conditions(schemas, item_map, unit_map, context_toplevel,
 def convert_excel_to_jsonld(excel_file):
     excel_data = pd.ExcelFile(excel_file)
     
-    schemas = pd.read_excel(excel_data, 'Schemas')
+    schema = pd.read_excel(excel_data, 'Schema')
     item_map = pd.read_excel(excel_data, 'Ontology - Item').set_index('Item').to_dict(orient='index')
     unit_map = pd.read_excel(excel_data, 'Ontology - Unit').set_index('Item').to_dict(orient='index')
     context_toplevel = pd.read_excel(excel_data, '@context-TopLevel')
     context_connector = pd.read_excel(excel_data, '@context-Connector')
 
-    jsonld_output = create_jsonld_with_conditions(schemas, item_map, unit_map, context_toplevel, context_connector)
+    jsonld_output = create_jsonld_with_conditions(schema, item_map, unit_map, context_toplevel, context_connector)
     
     return jsonld_output
 
