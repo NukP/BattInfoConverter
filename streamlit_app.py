@@ -74,9 +74,6 @@ def create_jsonld_with_conditions(schema, item_map, unit_map, context_toplevel, 
             "@type": "rdfs:comment",
             "comments": {}
         },
-        "Battery": {
-            "@type": "battery:Battery"
-        }
     }
 
     # Build the @context part
@@ -90,9 +87,9 @@ def create_jsonld_with_conditions(schema, item_map, unit_map, context_toplevel, 
 
     # Helper function to add nested structures with type annotations
     def add_to_structure(path, value, unit):
-        current_level = jsonld["Battery"]
+        current_level = jsonld
         # Iterate through the path to create or navigate the structure
-        for idx, part in enumerate(path[1:]):
+        for idx, part in enumerate(path[0:]):
             is_last = idx == len(path) - 2  # Check if current part is the last in the path
 
             if part not in current_level:
