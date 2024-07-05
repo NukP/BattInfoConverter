@@ -5,7 +5,7 @@ import os
 from io import BytesIO
 
 # Define the version of the app
-APP_VERSION = "0.1.2"
+APP_VERSION = "0.2.0"
 
 
 markdown_content = """ 
@@ -89,7 +89,6 @@ def create_jsonld_with_conditions(schema, info, item_map, unit_map, context_topl
     
     connectors = set()
     for _, row in context_connector.iterrows():
-        #jsonld["@context"][1][row['Item']] = row['Key']
         connectors.add(row['Item'])  # Track connectors to avoid redefining types
 
 
