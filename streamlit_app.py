@@ -80,6 +80,7 @@ def create_jsonld_with_conditions(schema, info, item_map, unit_map, context_topl
         "@context": ["https://w3id.org/emmo/domain/battery/context", {}],
         "@type" : get_information_value(row_name = 'Cell type', df=info),
         "schema:version": str(get_information_value(row_name='BattINFO CoinCellSchema version', df=info)),
+        "rdfs:comment": get_information_value(row_name='Comments', df=info),
         "Comment": {
             "@type": "rdfs:comment",
             "comments": {}
