@@ -67,9 +67,11 @@ This work has been developed under the following project and funding agencies:
 
 image_url = 'https://raw.githubusercontent.com/NukP/xls_convert/fix_oslo2/BattInfoCOnverter.png'
 
-def create_jsonld_with_conditions(schema, item_map, unit_map, context_toplevel, context_connector):
+def create_jsonld_with_conditions(schema, info, item_map, unit_map, context_toplevel, context_connector):
     jsonld = {
         "@context": ["https://w3id.org/emmo/domain/battery/context", {}],
+        "@type" : info.loc[info['Item'] == 'Cell type', 'Key'].values[0],
+        "schema:version": str(info.loc[info['Item'] == 'BattINFO CoinCellSchema version', 'Key'].values[0]),
         "Comment": {
             "@type": "rdfs:comment",
             "comments": {}
@@ -164,12 +166,13 @@ def convert_excel_to_jsonld(excel_file):
     excel_data = pd.ExcelFile(excel_file)
     
     schema = pd.read_excel(excel_data, 'Schema')
+    info = pd.read_excel(excel_data, 'JSON-LD - Information')
     item_map = pd.read_excel(excel_data, 'Ontology - Item').set_index('Item').to_dict(orient='index')
     unit_map = pd.read_excel(excel_data, 'Ontology - Unit').set_index('Item').to_dict(orient='index')
     context_toplevel = pd.read_excel(excel_data, '@context-TopLevel')
     context_connector = pd.read_excel(excel_data, '@context-Connector')
 
-    jsonld_output = create_jsonld_with_conditions(schema, item_map, unit_map, context_toplevel, context_connector)
+    jsonld_output = create_jsonld_with_conditions(schema, info, item_map, unit_map, context_toplevel, context_connector)
     
     return jsonld_output
 
