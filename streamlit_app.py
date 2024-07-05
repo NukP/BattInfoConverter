@@ -67,9 +67,19 @@ This work has been developed under the following project and funding agencies:
 
 image_url = 'https://raw.githubusercontent.com/NukP/xls_convert/fix_oslo2/BattInfoCOnverter.png'
 
-def create_jsonld_with_conditions(schema, item_map, unit_map, context_toplevel, context_connector):
+def get_information_value(row_name, df, col_locator='Item'):
+    """
+    Return the value of a column "Key" at the row where the column "Item" is equal to row_name
+    """
+    return df.loc[df[col_locator] == row_name, 'Key'].values[0]
+
+def create_jsonld_with_conditions(schema, info, item_map, unit_map, context_toplevel, context_connector):
     jsonld = {
         "@context": ["https://w3id.org/emmo/domain/battery/context", {}],
+        "@type": get_information_value(row_name='Cell type', df=info),
+        "schema:version": get_information_value(row_name='BattINFO CoinCellSchema version', df=info),
+        "schemas:productID": get_information_value(row_name='Cell ID', df=info),
+        "schemas:dateCreated": str(get_information_value(row_name='Date of cell assembly', df=info)),
         "Comment": {
             "@type": "rdfs:comment",
             "comments": {}
@@ -165,8 +175,9 @@ def convert_excel_to_jsonld(excel_file):
     unit_map = pd.read_excel(excel_data, 'Ontology - Unit').set_index('Item').to_dict(orient='index')
     context_toplevel = pd.read_excel(excel_data, '@context-TopLevel')
     context_connector = pd.read_excel(excel_data, '@context-Connector')
+    info = pd.read_excel(excel_data, 'JSON - Info')
 
-    jsonld_output = create_jsonld_with_conditions(schema, item_map, unit_map, context_toplevel, context_connector)
+    jsonld_output = create_jsonld_with_conditions(schema, info, item_map, unit_map, context_toplevel, context_connector)
     
     return jsonld_output
 
