@@ -80,10 +80,7 @@ def create_jsonld_with_conditions(schema, info, item_map, unit_map, context_topl
         "schema:version": get_information_value(row_name='BattINFO CoinCellSchema version', df=info),
         "schemas:productID": get_information_value(row_name='Cell ID', df=info),
         "schemas:dateCreated": str(get_information_value(row_name='Date of cell assembly', df=info)),
-        "Comment": {
-            "@type": "rdfs:comment",
-            "comments": {}
-        },
+        "rdfs:comment": {} 
     }
 
     # Build the @context part
@@ -151,7 +148,7 @@ def create_jsonld_with_conditions(schema, info, item_map, unit_map, context_topl
         if pd.isna(row['Value']) or row['Ontology link'] == 'NotOntologize':
             continue
         if row['Ontology link'] == 'Comment':
-            jsonld["Comment"]["comments"][row['Metadata']] = row['Value']
+            jsonld["rdfs:comment"][row['Metadata']] = row['Value']
             continue
         if pd.isna(row['Unit']):
             raise ValueError(f"The value '{row['Value']}' is filled in the wrong row, please check the schema")
@@ -160,7 +157,7 @@ def create_jsonld_with_conditions(schema, info, item_map, unit_map, context_topl
         add_to_structure(ontology_path, row['Value'], row['Unit'])
 
     # Add the BattInfoConverter version comment
-    jsonld["Comment"]["comments"]["BattINFO Converter version"] = APP_VERSION
+    jsonld["rdfs:comment"]["BattINFO Converter version"] = APP_VERSION
 
     return jsonld
 
