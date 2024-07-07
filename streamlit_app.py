@@ -131,10 +131,14 @@ def create_jsonld_with_conditions(schema, info, item_map, unit_map, context_topl
                         }
                     })
                 else:
-                    if "value" not in current_level[part]:
-                        current_level[part]["value"] = []
-                    current_level[part]["value"].append(value)
-    
+                    if "@type" in current_level[part]:
+                        if isinstance(current_level[part]["@type"], list):
+                            current_level[part]["@type"].append(value)
+                        else:
+                            current_level[part]["@type"] = [current_level[part]["@type"], value]
+                    else:
+                        current_level[part]["@type"] = value
+        
 
     # Process each schema entry to construct the JSON-LD output
     for _, row in schema.iterrows():
