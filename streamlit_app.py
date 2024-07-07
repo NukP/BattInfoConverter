@@ -96,12 +96,14 @@ def create_jsonld_with_conditions(schema, info, item_map, unit_map, context_topl
     def add_to_structure(path, value, unit):
         current_level = jsonld
         # Iterate through the path to create or navigate the structure
-        for idx, part in enumerate(path[0:]):
-            is_last = idx == len(path) - 2  # Check if current part is the last in the path
+        for idx, part in enumerate(path):
+            is_last = idx == len(path) - 1  # Check if current part is the last in the path
 
             if part not in current_level:
                 if part in connectors:
-                    current_level[part] = {}
+                    # Assign the default @type for non-terminal connectors
+                    connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
+                    current_level[part] = {"@type": connector_type}
                 else:
                     if part in item_map:
                         current_level[part] = {"@type": item_map[part]['Key']}
@@ -117,11 +119,6 @@ def create_jsonld_with_conditions(schema, info, item_map, unit_map, context_topl
                     if pd.isna(unit):
                         raise ValueError(f"The value '{value}' is filled in the wrong row, please check the schema")
                     unit_info = unit_map[unit]
-                    if part not in current_level:
-                        current_level[part] = {
-                            "@type": final_type,
-                            "hasNumericalPart": []
-                        }
                     if "hasNumericalPart" not in current_level[part]:
                         current_level[part]["hasNumericalPart"] = []
                     current_level[part]["hasNumericalPart"].append({
@@ -134,14 +131,10 @@ def create_jsonld_with_conditions(schema, info, item_map, unit_map, context_topl
                         }
                     })
                 else:
-                    if part not in current_level:
-                        current_level[part] = {
-                            "@type": final_type,
-                            "value": []
-                        }
                     if "value" not in current_level[part]:
                         current_level[part]["value"] = []
                     current_level[part]["value"].append(value)
+    
 
     # Process each schema entry to construct the JSON-LD output
     for _, row in schema.iterrows():
