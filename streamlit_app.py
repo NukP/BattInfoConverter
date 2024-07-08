@@ -125,52 +125,56 @@ def create_jsonld_with_conditions(schema, info, unit_map, context_toplevel, cont
 def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_connector):
     current_level = jsonld
 
-    # Iterate through the path to create or navigate the structure
     for idx, part in enumerate(path):
-        is_last = idx == len(path) - 1  # Check if current part is the last in the path
+        is_last = idx == len(path) - 1
 
         if part not in current_level:
             if part in connectors:
-                # Assign the default @type for non-terminal connectors
                 connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
                 current_level[part] = {"@type": connector_type}
+            else:
+                current_level[part] = {}
 
-        if not is_last:
-            current_level = current_level[part]
-            # Ensure @type is a list if we need to add more types later
-            if "@type" in current_level and part in connectors:
-                if not isinstance(current_level["@type"], list):
-                    current_level["@type"] = [current_level["@type"]]
-                connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
-                if pd.isna(connector_type):
-                    connector_type = part
-                if connector_type not in current_level["@type"]:
-                    current_level["@type"].append(connector_type)
-        else:
-            # Handle the unit and value structure for the last item
+        current_level = current_level[part]
+
+        if not is_last and part in connectors:
+            connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
+            if "@type" not in current_level:
+                current_level["@type"] = connector_type
+            elif current_level["@type"] != connector_type:
+                if isinstance(current_level["@type"], list):
+                    if connector_type not in current_level["@type"]:
+                        current_level["@type"].append(connector_type)
+                else:
+                    current_level["@type"] = [current_level["@type"], connector_type]
+
+        if is_last:
             if unit != 'No Unit':
-                if pd.isna(unit):
+                if unit is None or unit == '':
                     raise ValueError(f"The value '{value}' is filled in the wrong row, please check the schema")
                 unit_info = unit_map[unit]
-                current_level["@type"] = part
+                if "@type" in current_level:
+                    current_level["@type"] = [current_level["@type"], part] if isinstance(current_level["@type"], str) else current_level["@type"]
+                    if part not in current_level["@type"]:
+                        current_level["@type"].append(part)
+                else:
+                    current_level["@type"] = part
                 current_level["hasNumericalPart"] = {
                     "@type": "emmo:Real",
                     "hasNumericalValue": value
                 }
                 current_level["hasMeasurementUnit"] = unit_info['Key']
             else:
-                # Handle the final connector with "No Unit" correctly
-                connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
                 if "@type" in current_level:
                     if isinstance(current_level["@type"], list):
-                        current_level["@type"].append(connector_type)
+                        if value not in current_level["@type"]:
+                            current_level["@type"].append(value)
                     else:
-                        current_level["@type"] = [current_level["@type"], connector_type]
+                        current_level["@type"] = [current_level["@type"], value]
                 else:
-                    current_level["@type"] = connector_type
-                current_level[part] = {"@type": value}
+                    current_level["@type"] = value
 
-
+    return jsonld
 
 def main():
     st.image(image_url)
