@@ -151,6 +151,8 @@ def add_to_structure(jsonld, path, value, unit, connectors, item_map, unit_map, 
             if part in connectors:
                 # Assign the default @type for non-terminal connectors
                 connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
+                if pd.isna(connector_type):
+                    connector_type = item_map[path[-1]]['Key']
                 current_level[part] = {"@type": connector_type}
             else:
                 if part in item_map:
@@ -186,6 +188,7 @@ def add_to_structure(jsonld, path, value, unit, connectors, item_map, unit_map, 
                     current_level[part]["@type"] = value
             print(f"Final current_level[{part}]: {current_level[part]}")
     print(f"Final jsonld: {jsonld}")
+
 
 
 def main():
