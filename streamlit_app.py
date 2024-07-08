@@ -73,94 +73,6 @@ def get_information_value(row_name, df, col_locator='Item'):
     """
     return df.loc[df[col_locator] == row_name, 'Key'].values[0]
 
-def create_jsonld_with_conditions(schema, info, item_map, unit_map, context_toplevel, context_connector):
-    jsonld = {
-        "@context": ["https://w3id.org/emmo/domain/battery/context", {}],
-        "@type": get_information_value(row_name='Cell type', df=info),
-        "schema:version": get_information_value(row_name='BattINFO CoinCellSchema version', df=info),
-        "schemas:productID": get_information_value(row_name='Cell ID', df=info),
-        "schemas:dateCreated": str(get_information_value(row_name='Date of cell assembly', df=info)),
-        "rdfs:comment": {} 
-    }
-
-    # Build the @context part
-    for _, row in context_toplevel.iterrows():
-        jsonld["@context"][1][row['Item']] = row['Key']
-    
-    connectors = set()
-    for _, row in context_connector.iterrows():
-        connectors.add(row['Item'])  # Track connectors to avoid redefining types
-
-
-    # Helper function to add nested structures with type annotations
-    def add_to_structure(path, value, unit):
-        current_level = jsonld
-        # Iterate through the path to create or navigate the structure
-        for idx, part in enumerate(path):
-            is_last = idx == len(path) - 1  # Check if current part is the last in the path
-
-            if part not in current_level:
-                if part in connectors:
-                    # Assign the default @type for non-terminal connectors
-                    connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
-                    current_level[part] = {"@type": connector_type}
-                else:
-                    if part in item_map:
-                        current_level[part] = {"@type": item_map[part]['Key']}
-                    else:
-                        raise ValueError(f"Connector or item '{part}' is not defined in any relevant sheet.")
-
-            if not is_last:
-                current_level = current_level[part]
-            else:
-                # Handle the unit and value structure for the last item
-                final_type = item_map.get(part, {}).get('Key', '')
-                if unit != 'No Unit':
-                    if pd.isna(unit):
-                        raise ValueError(f"The value '{value}' is filled in the wrong row, please check the schema")
-                    unit_info = unit_map[unit]
-                    if "hasNumericalPart" not in current_level[part]:
-                        current_level[part]["hasNumericalPart"] = []
-                    current_level[part]["hasNumericalPart"].append({
-                        "@type": "emmo:Real",
-                        "hasNumericalValue": value,
-                        "unit": {
-                            "hasMeasurementUnit": unit_info['Key'],
-                            "label": unit_info['Label'],
-                            "symbol": unit_info['Symbol']
-                        }
-                    })
-                else:
-                    if "@type" in current_level[part]:
-                        if isinstance(current_level[part]["@type"], list):
-                            current_level[part]["@type"].append(value)
-                        else:
-                            current_level[part]["@type"] = [current_level[part]["@type"], value]
-                    else:
-                        current_level[part]["@type"] = value
-        
-
-    # Process each schema entry to construct the JSON-LD output
-    for _, row in schema.iterrows():
-        if pd.isna(row['Value']) or row['Ontology link'] == 'NotOntologize':
-            continue
-        if row['Ontology link'] == 'Comment':
-            jsonld["rdfs:comment"][row['Metadata']] = row['Value']
-            continue
-        if pd.isna(row['Unit']):
-            raise ValueError(f"The value '{row['Value']}' is filled in the wrong row, please check the schema")
-
-        ontology_path = row['Ontology link'].split('-')
-        add_to_structure(ontology_path, row['Value'], row['Unit'])
-
-    # Add the BattInfoConverter version comment
-    jsonld["rdfs:comment"]["BattINFO Converter version"] = APP_VERSION
-
-    return jsonld
-
-
-
-
 def convert_excel_to_jsonld(excel_file):
     excel_data = pd.ExcelFile(excel_file)
     
@@ -171,9 +83,110 @@ def convert_excel_to_jsonld(excel_file):
     context_connector = pd.read_excel(excel_data, '@context-Connector')
     info = pd.read_excel(excel_data, 'JSON - Info')
 
+    print("Data loaded from Excel:")
+    print(f"Schema: {schema.head()}")
+    print(f"Item map: {item_map}")
+    print(f"Unit map: {unit_map}")
+    print(f"Context top level: {context_toplevel}")
+    print(f"Context connector: {context_connector}")
+    print(f"Info: {info}")
+
     jsonld_output = create_jsonld_with_conditions(schema, info, item_map, unit_map, context_toplevel, context_connector)
     
     return jsonld_output
+
+def create_jsonld_with_conditions(schema, info, item_map, unit_map, context_toplevel, context_connector):
+    jsonld = {
+        "@context": ["https://w3id.org/emmo/domain/battery/context", {}],
+        "@type": get_information_value(row_name='Cell type', df=info),
+        "schema:version": get_information_value(row_name='BattINFO CoinCellSchema version', df=info),
+        "schemas:productID": get_information_value(row_name='Cell ID', df=info),
+        "schemas:dateCreated": str(get_information_value(row_name='Date of cell assembly', df=info)),
+        "rdfs:comment": {} 
+    }
+
+    print(f"Initial JSON-LD: {jsonld}")
+
+    # Build the @context part
+    for _, row in context_toplevel.iterrows():
+        jsonld["@context"][1][row['Item']] = row['Key']
+    
+    print(f"Updated @context: {jsonld['@context']}")
+
+    connectors = set()
+    for _, row in context_connector.iterrows():
+        connectors.add(row['Item'])  # Track connectors to avoid redefining types
+
+    # Process each schema entry to construct the JSON-LD output
+    for _, row in schema.iterrows():
+        print(f"Processing row: {row}")
+        if pd.isna(row['Value']) or row['Ontology link'] == 'NotOntologize':
+            continue
+        if row['Ontology link'] == 'Comment':
+            jsonld["rdfs:comment"][row['Metadata']] = row['Value']
+            continue
+        if pd.isna(row['Unit']):
+            raise ValueError(f"The value '{row['Value']}' is filled in the wrong row, please check the schema")
+
+        ontology_path = row['Ontology link'].split('-')
+        print(f"Ontology path: {ontology_path}")
+        add_to_structure(jsonld, ontology_path, row['Value'], row['Unit'], connectors, item_map, unit_map, context_connector)
+
+    # Add the BattInfoConverter version comment
+    jsonld["rdfs:comment"]["BattINFO Converter version"] = APP_VERSION
+
+    print(f"Final JSON-LD: {jsonld}")
+
+    return jsonld
+
+def add_to_structure(jsonld, path, value, unit, connectors, item_map, unit_map, context_connector):
+    current_level = jsonld
+    print(f"Initial jsonld: {jsonld}")
+    # Iterate through the path to create or navigate the structure
+    for idx, part in enumerate(path):
+        is_last = idx == len(path) - 1  # Check if current part is the last in the path
+
+        print(f"Current part: {part}")
+        if part not in current_level:
+            if part in connectors:
+                # Assign the default @type for non-terminal connectors
+                connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
+                current_level[part] = {"@type": connector_type}
+            else:
+                if part in item_map:
+                    current_level[part] = {"@type": item_map[part]['Key']}
+                else:
+                    raise ValueError(f"Connector or item '{part}' is not defined in any relevant sheet.")
+            print(f"Updated current_level[{part}]: {current_level[part]}")
+
+        if not is_last:
+            current_level = current_level[part]
+            print(f"Navigating to the next level: {current_level}")
+        else:
+            # Handle the unit and value structure for the last item
+            if unit != 'No Unit':
+                if pd.isna(unit):
+                    raise ValueError(f"The value '{value}' is filled in the wrong row, please check the schema")
+                unit_info = unit_map[unit]
+                current_level[part] = {
+                    "@type": item_map[part]['Key'],
+                    "hasNumericalPart": {
+                        "@type": "emmo:Real",
+                        "hasNumericalValue": value
+                    },
+                    "hasMeasurementUnit": unit_info['Key']
+                }
+            else:
+                if "@type" in current_level[part]:
+                    if isinstance(current_level[part]["@type"], list):
+                        current_level[part]["@type"].append(value)
+                    else:
+                        current_level[part]["@type"] = [current_level[part]["@type"], value]
+                else:
+                    current_level[part]["@type"] = value
+            print(f"Final current_level[{part}]: {current_level[part]}")
+    print(f"Final jsonld: {jsonld}")
+
 
 def main():
     st.image(image_url)
@@ -204,6 +217,6 @@ def main():
     st.markdown(markdown_content, unsafe_allow_html=True)
     st.image('https://raw.githubusercontent.com/NukP/xls_convert/fix_oslo2/sponsor.png', width=700)
 
-
 if __name__ == "__main__":
     main()
+
