@@ -124,6 +124,7 @@ def create_jsonld_with_conditions(schema, info, unit_map, context_toplevel, cont
 
 def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_connector):
     current_level = jsonld
+
     # Iterate through the path to create or navigate the structure
     for idx, part in enumerate(path):
         is_last = idx == len(path) - 1  # Check if current part is the last in the path
@@ -132,13 +133,19 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
             if part in connectors:
                 # Assign the default @type for non-terminal connectors
                 connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
-                if pd.isna(connector_type):
-                    connector_type = path[-1]
                 current_level[part] = {"@type": connector_type}
-
 
         if not is_last:
             current_level = current_level[part]
+            # Ensure @type is a list if we need to add more types later
+            if "@type" in current_level and part in connectors:
+                if not isinstance(current_level["@type"], list):
+                    current_level["@type"] = [current_level["@type"]]
+                connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
+                if pd.isna(connector_type):
+                    connector_type = part
+                if connector_type not in current_level["@type"]:
+                    current_level["@type"].append(connector_type)
         else:
             # Handle the unit and value structure for the last item
             if unit != 'No Unit':
@@ -152,7 +159,18 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
                 }
                 current_level["hasMeasurementUnit"] = unit_info['Key']
             else:
-                current_level["@type"] = value
+                # Handle the final connector with "No Unit" correctly
+                connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
+                if "@type" in current_level:
+                    if isinstance(current_level["@type"], list):
+                        current_level["@type"].append(connector_type)
+                    else:
+                        current_level["@type"] = [current_level["@type"], connector_type]
+                else:
+                    current_level["@type"] = connector_type
+                current_level[part] = {"@type": value}
+
+
 
 def main():
     st.image(image_url)
