@@ -154,10 +154,6 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
             else:
                 current_level["@type"] = value
 
-
-
-
-
 def main():
     st.image(image_url)
     
