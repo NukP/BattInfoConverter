@@ -79,6 +79,7 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
     # Iterate through the path to create or navigate the structure
     for idx, part in enumerate(path):
         is_last = idx == len(path) - 1  # Check if current part is the last in the path
+        is_second_last = idx == len(path) - 2  # Check if current part is the second last in the path
 
         # Initialize the current part if it doesn't exist
         if part not in current_level:
@@ -91,6 +92,32 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
                     current_level[part] = {"@type": connector_type}
             else:
                 current_level[part] = {}
+
+        # Handle the unit and value structure for the second last item only when unit is not "No Unit"
+        if is_second_last and unit != 'No Unit':
+            if pd.isna(unit):
+                raise ValueError(f"The value '{value}' is filled in the wrong row, please check the schema")
+            unit_info = unit_map[unit]
+            current_level[part] = {
+                "@type": path[-1],
+                "hasNumericalPart": {
+                    "@type": "emmo:Real",
+                    "hasNumericalValue": value
+                },
+                "hasMeasurementUnit": unit_info['Key']
+            }
+            break
+
+        # Handle the last item normally when unit is "No Unit"
+        if is_last and unit == 'No Unit':
+            if "@type" in current_level:
+                if isinstance(current_level["@type"], list):
+                    current_level["@type"].append(value)
+                else:
+                    current_level["@type"] = [current_level["@type"], value]
+            else:
+                current_level["@type"] = value
+            break
 
         # Move to the next level in the path
         current_level = current_level[part]
@@ -108,29 +135,21 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
                     else:
                         current_level["@type"] = [current_level["@type"], connector_type]
 
-        # Handle the unit and value structure for the last item
-        if is_last:
-            if unit != 'No Unit':
-                if pd.isna(unit):
-                    raise ValueError(f"The value '{value}' is filled in the wrong row, please check the schema")
-                unit_info = unit_map[unit]
-                current_level["@type"] = part
-                current_level["hasNumericalPart"] = {
-                    "@type": "emmo:Real",
-                    "hasNumericalValue": value
-                }
-                current_level["hasMeasurementUnit"] = unit_info['Key']
-            else:
-                # Add the value as the @type of the final connector
-                if "@type" in current_level:
-                    if isinstance(current_level["@type"], list):
-                        current_level["@type"].append(value)
-                    else:
-                        current_level["@type"] = [current_level["@type"], value]
+        # Handle the unit and value structure for the last item when unit is "No Unit"
+        if is_second_last and unit == 'No Unit':
+            next_part = path[idx + 1]
+            if next_part not in current_level:
+                current_level[next_part] = {}
+            current_level = current_level[next_part]
+            if "@type" in current_level:
+                if isinstance(current_level["@type"], list):
+                    current_level["@type"].append(value)
                 else:
-                    current_level["@type"] = value
+                    current_level["@type"] = [current_level["@type"], value]
+            else:
+                current_level["@type"] = value
+            break
 
-# Here is the full set of required functions with the fix incorporated.
 
 def convert_excel_to_jsonld(excel_file):
     excel_data = pd.ExcelFile(excel_file)
@@ -180,8 +199,6 @@ def create_jsonld_with_conditions(schema, info, unit_map, context_toplevel, cont
     jsonld["rdfs:comment"]["BattINFO Converter version"] = APP_VERSION
 
     return jsonld
-
-
 
 
 def main():
