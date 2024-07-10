@@ -111,8 +111,10 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
         # Handle the last item normally when unit is "No Unit"
         if is_last and unit == 'No Unit':
             if "@type" in current_level:
+                # If the @type is already set, append the new value to the list (in the case that the connector already has default @type)
                 if isinstance(current_level["@type"], list):
                     current_level["@type"].append(value)
+                # If the @type is not set (e.g. there is no default value for the connector)
                 else:
                     current_level["@type"] = [current_level["@type"], value]
             else:
