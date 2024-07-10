@@ -75,7 +75,6 @@ def get_information_value(row_name, df, col_locator='Item'):
 
 def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_connector, unique_id):
     current_level = jsonld
-
     # Iterate through the path to create or navigate the structure
     for idx, part in enumerate(path):
         is_last = idx == len(path) - 1  # Check if current part is the last in the path
@@ -89,6 +88,7 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
                 if pd.isna(connector_type):
                     current_level[part] = {}
                 else:
+                    st.write("Enter line 90 loop")
                     current_level[part] = {"@type": connector_type}
             else:
                 current_level[part] = {}
@@ -109,17 +109,18 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
             break
 
         # Handle the last item normally when unit is "No Unit"
-        if is_last and unit == 'No Unit':
-            if "@type" in current_level:
-                # If the @type is already set, append the new value to the list (in the case that the connector already has default @type)
-                if isinstance(current_level["@type"], list):
-                    current_level["@type"].append(value)
-                # If the @type is not set (e.g. there is no default value for the connector)
-                else:
-                    current_level["@type"] = [current_level["@type"], value]
-            else:
-                current_level["@type"] = value
-            break
+        # if is_last and unit == 'No Unit':
+        #     if "@type" in current_level:
+        #         # If the @type is already set, append the new value to the list (in the case that the connector already has default @type)
+        #         if isinstance(current_level["@type"], list):
+        #             current_level["@type"].append(value)
+        #         # If the @type is not set (e.g. there is no default value for the connector)
+        #         else:
+        #             current_level["@type"] = [current_level["@type"], value]
+        #     else:
+        #         current_level["@type"] = value
+        #     break
+        
 
         # Move to the next level in the path
         current_level = current_level[part]
@@ -137,20 +138,25 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
                     else:
                         current_level["@type"] = [current_level["@type"], connector_type]
 
+
         # Handle the unit and value structure for the last item when unit is "No Unit"
         if is_second_last and unit == 'No Unit':
+            st.write("Enter line 143 loop")
             next_part = path[idx + 1]
             if next_part not in current_level:
                 current_level[next_part] = {}
             current_level = current_level[next_part]
-            if "@type" in current_level:
-                if isinstance(current_level["@type"], list):
-                    current_level["@type"].append(value)
+            if value in unique_id['Item'].values:
+                if "@type" in current_level:
+                    if isinstance(current_level["@type"], list):
+                        current_level["@type"].append(value)
+                    else:
+                        current_level["@type"] = [current_level["@type"], value]
                 else:
-                    current_level["@type"] = [current_level["@type"], value]
+                    current_level["@type"] = value
+                break
             else:
-                current_level["@type"] = value
-            break
+                current_level['rdfs:comment'] = value
 
 
 def convert_excel_to_jsonld(excel_file):
