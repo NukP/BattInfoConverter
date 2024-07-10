@@ -73,7 +73,7 @@ def get_information_value(row_name, df, col_locator='Item'):
     """
     return df.loc[df[col_locator] == row_name, 'Key'].values[0]
 
-def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_connector):
+def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_connector, unique_id):
     current_level = jsonld
 
     # Iterate through the path to create or navigate the structure
@@ -161,12 +161,13 @@ def convert_excel_to_jsonld(excel_file):
     context_toplevel = pd.read_excel(excel_data, '@context-TopLevel')
     context_connector = pd.read_excel(excel_data, '@context-Connector')
     info = pd.read_excel(excel_data, 'JSON - Info')
+    unique_id = pd.read_excel(excel_data, 'Unique ID')
 
-    jsonld_output = create_jsonld_with_conditions(schema, info, unit_map, context_toplevel, context_connector)
+    jsonld_output = create_jsonld_with_conditions(schema, info, unit_map, context_toplevel, context_connector, unique_id)
     
     return jsonld_output
 
-def create_jsonld_with_conditions(schema, info, unit_map, context_toplevel, context_connector):
+def create_jsonld_with_conditions(schema, info, unit_map, context_toplevel, context_connector, unique_id):
     jsonld = {
         "@context": ["https://w3id.org/emmo/domain/battery/context", {}],
         "@type": get_information_value(row_name='Cell type', df=info),
@@ -195,7 +196,7 @@ def create_jsonld_with_conditions(schema, info, unit_map, context_toplevel, cont
             raise ValueError(f"The value '{row['Value']}' is filled in the wrong row, please check the schema")
 
         ontology_path = row['Ontology link'].split('-')
-        add_to_structure(jsonld, ontology_path, row['Value'], row['Unit'], connectors, unit_map, context_connector)
+        add_to_structure(jsonld, ontology_path, row['Value'], row['Unit'], connectors, unit_map, context_connector, unique_id)
 
     # Add the BattInfoConverter version comment
     jsonld["rdfs:comment"]["BattINFO Converter version"] = APP_VERSION
