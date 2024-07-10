@@ -154,9 +154,13 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
                         current_level["@type"] = [current_level["@type"], value]
                 else:
                     current_level["@type"] = value
-                break
+                #break
             else:
                 current_level['rdfs:comment'] = value
+            item_id = unique_id.loc[unique_id['Item'] == value, 'ID'].values[0]
+            st.write(f'The id is {item_id}')
+            if pd.notna(item_id):
+                current_level['@id'] = item_id
 
 
 def convert_excel_to_jsonld(excel_file):
