@@ -122,7 +122,7 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
                     else:
                         current_level["@type"] = [current_level["@type"], value]
                 else:
-                    current_level["@type"] = value
+                    current_level["rdfs:comment"] = value
             break
 
         # Move to the next level in the path
@@ -159,7 +159,7 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
                     else:
                         current_level["@type"] = [current_level["@type"], value]
                 else:
-                    current_level["@type"] = value
+                    current_level["rdfs:comment"] = value
             break
 
 
