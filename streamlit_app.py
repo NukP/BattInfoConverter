@@ -79,13 +79,6 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
         is_last = idx == len(path) - 1
         is_second_last = idx == len(path) - 2
 
-        # Skip adding a new level if the part matches the current level
-        if part in current_level and isinstance(current_level[part], dict):
-            st.write(f"for the value {value}")
-            st.write(f"Skipping '{part}' as it already exists in the structure")
-            current_level = current_level[part]
-            continue
-
         # Initialize the part if it doesn't exist
         if part not in current_level:
             if part in connectors:
@@ -94,6 +87,7 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
                     current_level[part] = {}
                 else:
                     current_level[part] = {"@type": connector_type}
+                    st.write(f"For value: {value}, Adding connector '{part}' with type '{connector_type}' at level: {current_level[part]}")
             else:
                 current_level[part] = {}
 
@@ -106,24 +100,6 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
                 if current_level[path[idx + 1]]["@type"] == path[idx + 1]:
                     current_level = current_level[path[idx + 1]]
                     continue
-
-        # Handle the unit and value structure for the second last item only when unit is not "No Unit"
-        if is_second_last and unit != 'No Unit':
-            unit_info = unit_map[unit]
-            if "@type" in current_level:
-                if isinstance(current_level["@type"], list):
-                    if path[-1] not in current_level["@type"]:
-                        current_level["@type"].append(path[-1])
-                else:
-                    current_level["@type"] = [current_level["@type"], path[-1]]
-            else:
-                current_level["@type"] = path[-1]
-            current_level["hasNumericalPart"] = {
-                "@type": "emmo:Real",
-                "hasNumericalValue": value
-            }
-            current_level["hasMeasurementUnit"] = unit_info['Key']
-            break
 
         # Ensure @type is set correctly for non-terminal connectors
         if not is_last and part in connectors:
@@ -138,25 +114,62 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
                     else:
                         current_level["@type"] = [current_level["@type"], connector_type]
 
-        # Handle the unit and value structure for the last item when unit is "No Unit"
-        if is_second_last and unit == 'No Unit':
-            next_part = path[idx + 1]
-            if next_part not in current_level:
-                current_level[next_part] = {}
-            current_level = current_level[next_part]
-            if value in unique_id['Item'].values:
-                if "@type" in current_level:
-                    if isinstance(current_level["@type"], list):
-                        current_level["@type"].append(value)
-                    else:
-                        current_level["@type"] = [current_level["@type"], value]
+    # Handle the unit and value structure for the second last item only when unit is not "No Unit"
+    if is_second_last and unit != 'No Unit':
+        unit_info = unit_map[unit]
+        if "@type" in current_level:
+            if isinstance(current_level["@type"], list):
+                if path[-1] not in current_level["@type"]:
+                    current_level["@type"].append(path[-1])
+            else:
+                current_level["@type"] = [current_level["@type"], path[-1]]
+        else:
+            current_level["@type"] = path[-1]
+        current_level["hasNumericalPart"] = {
+            "@type": "emmo:Real",
+            "hasNumericalValue": value
+        }
+        current_level["hasMeasurementUnit"] = unit_info['Key']
+        return
+
+    # Handle the unit and value structure for the last item when unit is "No Unit"
+    if is_last and unit == 'No Unit':
+        if value in unique_id['Item'].values:
+            if "@type" in current_level:
+                if isinstance(current_level["@type"], list):
+                    current_level["@type"].append(value)
                 else:
-                    current_level["@type"] = value
+                    current_level["@type"] = [current_level["@type"], value]
+            else:
+                current_level["@type"] = value
+            item_id = unique_id.loc[unique_id['Item'] == value, 'ID'].values[0]
+            if pd.notna(item_id):
+                current_level['@id'] = item_id
+        else:
+            current_level['rdfs:comment'] = value
+        return
+
+    # Handle adding values and units for the last item
+    if is_last:
+        if unit != 'No Unit':
+            unit_info = unit_map[unit]
+            current_level[path[-1]] = {
+                "@type": path[-1],
+                "hasNumericalPart": {
+                    "@type": "emmo:Real",
+                    "hasNumericalValue": value
+                },
+                "hasMeasurementUnit": unit_info['Key']
+            }
+        else:
+            if value in unique_id['Item'].values:
+                current_level["@type"] = value
                 item_id = unique_id.loc[unique_id['Item'] == value, 'ID'].values[0]
                 if pd.notna(item_id):
                     current_level['@id'] = item_id
             else:
                 current_level['rdfs:comment'] = value
+
 
 def convert_excel_to_jsonld(excel_file):
     excel_data = pd.ExcelFile(excel_file)
