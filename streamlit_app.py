@@ -155,12 +155,13 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
                 else:
                     current_level["@type"] = value
                 #break
+                item_id = unique_id.loc[unique_id['Item'] == value, 'ID'].values[0]
+                st.write(f'The id is {item_id}')
+                if pd.notna(item_id):
+                    current_level['@id'] = item_id
             else:
                 current_level['rdfs:comment'] = value
-            item_id = unique_id.loc[unique_id['Item'] == value, 'ID'].values[0]
-            st.write(f'The id is {item_id}')
-            if pd.notna(item_id):
-                current_level['@id'] = item_id
+            
 
 
 def convert_excel_to_jsonld(excel_file):
@@ -238,7 +239,7 @@ def main():
                         mime="application/json")
         
         # Convert JSON-LD output to a string to display in text area (for preview)
-        st.text_area("JSON-LD Output", jsonld_str, height=300)
+        st.text_area("JSON-LD Output", jsonld_str, height=1000)
     
     st.markdown(markdown_content, unsafe_allow_html=True)
     st.image('https://raw.githubusercontent.com/NukP/xls_convert/fix_oslo2/sponsor.png', width=700)
