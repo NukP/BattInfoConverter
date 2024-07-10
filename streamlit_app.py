@@ -159,6 +159,7 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
                     else:
                         current_level["@type"] = [current_level["@type"], value]
                 else:
+                    st.write('Here')
                     current_level["rdfs:comment"] = value
             break
 
