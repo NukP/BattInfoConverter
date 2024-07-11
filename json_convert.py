@@ -27,7 +27,7 @@ def get_information_value(row_name, df, col_locator='Item'):
 
 def add_to_structure(jsonld, path, value, unit, data_container):
     current_level = jsonld
-    unit_map = data_container.data['unit_map']
+    unit_map = data_container.data['unit_map'].set_index('Item').to_dict(orient='index')
     context_connector = data_container.data['context_connector']
     connectors = set(context_connector['Item'])
 
