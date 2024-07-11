@@ -122,7 +122,13 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
                     else:
                         current_level["@type"] = [current_level["@type"], value]
                 else:
-                    current_level["rdfs:comment"] = value
+                    current_level["rdf:comment"] = value
+
+            # Ensure @type is set for the last connector even if non-ontologized
+            if part in connectors:
+                connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
+                if "@type" not in current_level and not pd.isna(connector_type):
+                    current_level["@type"] = connector_type
             break
 
         # Move to the next level in the path
@@ -141,27 +147,6 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
                     else:
                         current_level["@type"] = [current_level["@type"], connector_type]
 
-        # Handle the unit and value structure for the last item when unit is "No Unit"
-        if is_second_last and unit == 'No Unit':
-            next_part = path[idx + 1]
-            if next_part not in current_level:
-                current_level[next_part] = {}
-            current_level = current_level[next_part]
-            if value in unique_id['Item'].values:
-                item_id = unique_id.loc[unique_id['Item'] == value, 'ID'].values[0]
-                current_level["@type"] = value
-                if pd.notna(item_id):
-                    current_level['@id'] = item_id
-            else:
-                if "@type" in current_level:
-                    if isinstance(current_level["@type"], list):
-                        current_level["@type"].append(value)
-                    else:
-                        current_level["@type"] = [current_level["@type"], value]
-                else:
-                    st.write('Here')
-                    current_level["rdfs:comment"] = value
-            break
 
 
 
