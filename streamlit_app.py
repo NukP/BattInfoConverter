@@ -91,7 +91,7 @@ def main():
                         mime="application/json")
         
         # Convert JSON-LD output to a string to display in text area (for preview)
-        st.text_area("JSON-LD Output", jsonld_str, height=300)
+        st.text_area("JSON-LD Output", jsonld_str, height=1000)
     
     st.markdown(markdown_content, unsafe_allow_html=True)
     st.image('https://raw.githubusercontent.com/NukP/xls_convert/fix_oslo2/sponsor.png', width=700)

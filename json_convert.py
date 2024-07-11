@@ -4,7 +4,7 @@ This moduel is used to handle Excel to JSON-LD conversion.
 import pandas as pd
 
 # Define the version of the app
-APP_VERSION = "0.X.0"
+APP_VERSION = "0.3.0"
 
 def get_information_value(row_name, df, col_locator='Item'):
     """
