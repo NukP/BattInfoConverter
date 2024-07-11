@@ -105,26 +105,23 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
                 "hasMeasurementUnit": unit_info['Key']
             }
             break
-
+        
+        #The issue is here!!!!!!!!!!! this block
         # Handle the last item normally when unit is "No Unit"
         if is_last and unit == 'No Unit':
-            if value in unique_id['Item'].values:
-                item_id = unique_id.loc[unique_id['Item'] == value, 'ID'].values[0]
-                current_level["@type"] = value
-                if pd.notna(item_id):
-                    current_level['@id'] = item_id
-            else:
-                if part in connectors:
-                    connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
-                    current_level["@type"] = connector_type
-                    current_level["rdf:comment"] = value
+            if "@type" in current_level:
+                # If the @type is already set, append the new value to the list (in the case that the connector already has default @type)
+                if isinstance(current_level["@type"], list):
+                    current_level["@type"].append(value)
+                # If the @type is not set (e.g. there is no default value for the connector)
                 else:
-                    current_level["rdfs:comment"] = value
+                    current_level["@type"] = [current_level["@type"], value]
+            else:
+                current_level["@type"] = value
             break
 
         # Move to the next level in the path only if it exists
-        if part in current_level:
-            current_level = current_level[part]
+        current_level = current_level[part]
 
         # Ensure @type is set correctly for non-terminal connectors
         if not is_last and part in connectors:
@@ -138,9 +135,6 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
                             current_level["@type"].append(connector_type)
                     else:
                         current_level["@type"] = [current_level["@type"], connector_type]
-        st.write(f'value: {value}, part: {part}')
-        st.write(current_level)
-        st.write('\n')
 
 
 
