@@ -111,7 +111,9 @@ def add_to_structure(jsonld, path, value, unit, data_container):
                 current_level[next_part] = {}
             current_level = current_level[next_part]
             if value in unique_id['Item'].values:
-                current_level['@id'] = get_information_value(unique_id, 'ID', value, "Item")
+                unique_id_of_value = get_information_value(unique_id, 'ID', value, "Item")
+                if not pd.isna(unique_id_of_value):
+                    current_level['@id'] = unique_id_of_value
                 if "@type" in current_level:
                     if isinstance(current_level["@type"], list):
                         current_level["@type"].append(value)
