@@ -55,7 +55,7 @@ def add_to_structure(jsonld, path, value, unit, data_container):
 
         # Handle the unit and value structure for the second last item only when unit is not "No Unit"
         if is_second_last and unit != 'No Unit':
-            print(f"pass the 56 loop, value: {value}, part: {part}")
+            #print(f"pass the 56 loop, value: {value}, part: {part}")
             if pd.isna(unit):
                 raise ValueError(f"The value '{value}' is filled in the wrong row, please check the schema")
             unit_info = unit_map[unit]
@@ -71,7 +71,7 @@ def add_to_structure(jsonld, path, value, unit, data_container):
 
         # Handle the last item normally when unit is "No Unit" -- Fix here for the issue with unique id
         if is_last and unit == 'No Unit':
-            print(f"pass the 72 loop, value: {value}, part: {part}")
+            #print(f"pass the 72 loop, value: {value}, part: {part}")
             if value in unique_id['Item'].values:
                 print(f'The value {value} is in unique id')
                 if "@type" in current_level:
@@ -90,7 +90,7 @@ def add_to_structure(jsonld, path, value, unit, data_container):
 
         # Ensure @type is set correctly for non-terminal connectors
         if not is_last and part in connectors:
-            print(f'pass the 90 loop, value: {value}, part: {part}')
+            #print(f'pass the 90 loop, value: {value}, part: {part}')
             connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
             if not pd.isna(connector_type):
                 if "@type" not in current_level:
@@ -105,7 +105,7 @@ def add_to_structure(jsonld, path, value, unit, data_container):
 
         # Handle the unit and value structure for the last item when unit is "No Unit"
         if is_second_last and unit == 'No Unit':
-            print(f'pass the 104 loop, value: {value}, part: {part}')
+            #print(f'pass the 104 loop, value: {value}, part: {part}')
             next_part = path[idx + 1]
             if next_part not in current_level:
                 current_level[next_part] = {}
@@ -120,10 +120,13 @@ def add_to_structure(jsonld, path, value, unit, data_container):
                     else:
                         current_level["@type"] = [current_level["@type"], value]
                 else:
-                    current_level["@type"] = value
+                    connector_type = context_connector.loc[context_connector['Item'] == next_part, 'Key'].values[0]
+                    current_level["@type"] = [value, connector_type]  # Ensure '@type' is always a list including default connector type
             else:
                 current_level['rdfs:comment'] = value
             break
+
+
 
 def create_jsonld_with_conditions(data_container: ExcelContainer):
     schema = data_container.data['schema']
@@ -162,8 +165,8 @@ def create_jsonld_with_conditions(data_container: ExcelContainer):
     return jsonld
 
 def convert_excel_to_jsonld(excel_file):
-    print('Converting new Excel file')
-    print('\n')
+    #print('Converting new Excel file')
+    #print('\n')
     # Create an instance of ExcelContainer
     data_container = ExcelContainer(excel_file)
 
