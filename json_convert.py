@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 import pandas as pd
 import streamlit as st
 
-APP_VERSION = "0.3.0"
+APP_VERSION = "0.4.0"
 
 @dataclass
 class ExcelContainer:
