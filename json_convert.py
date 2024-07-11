@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 import pandas as pd
+import streamlit as st
 
 APP_VERSION = "0.3.0"
 
@@ -19,17 +20,21 @@ class ExcelContainer:
             "unique_id": pd.read_excel(excel_data, 'Unique ID')
         }
 
-def get_information_value(row_name, df, col_locator='Item'):
+def get_information_value(df, col_to_look, row_to_look, col_to_match):
     """
-    Return the value of a column "Key" at the row where the column "Item" is equal to row_name
+    Return the value of a column "col_to_look" at the row where the column "col_to_match" is equal to row_to_look.
+    If no match is found, return None.
     """
-    return df.loc[df[col_locator] == row_name, 'Key'].values[0]
+    result = df.query(f"{col_to_match} == @row_to_look")[col_to_look]
+    return result.iloc[0] if not result.empty else None
 
 def add_to_structure(jsonld, path, value, unit, data_container):
     current_level = jsonld
     unit_map = data_container.data['unit_map'].set_index('Item').to_dict(orient='index')
     context_connector = data_container.data['context_connector']
     connectors = set(context_connector['Item'])
+    unique_id = data_container.data['unique_id']
+
 
     # Iterate through the path to create or navigate the structure
     for idx, part in enumerate(path):
@@ -50,6 +55,7 @@ def add_to_structure(jsonld, path, value, unit, data_container):
 
         # Handle the unit and value structure for the second last item only when unit is not "No Unit"
         if is_second_last and unit != 'No Unit':
+            print(f"pass the 56 loop, value: {value}, part: {part}")
             if pd.isna(unit):
                 raise ValueError(f"The value '{value}' is filled in the wrong row, please check the schema")
             unit_info = unit_map[unit]
@@ -63,15 +69,20 @@ def add_to_structure(jsonld, path, value, unit, data_container):
             }
             break
 
-        # Handle the last item normally when unit is "No Unit"
+        # Handle the last item normally when unit is "No Unit" -- Fix here for the issue with unique id
         if is_last and unit == 'No Unit':
-            if "@type" in current_level:
-                if isinstance(current_level["@type"], list):
-                    current_level["@type"].append(value)
+            print(f"pass the 72 loop, value: {value}, part: {part}")
+            if value in unique_id['Item'].values:
+                print(f'The value {value} is in unique id')
+                if "@type" in current_level:
+                    if isinstance(current_level["@type"], list):
+                        current_level["@type"].append(value)
+                    else:
+                        current_level["@type"] = [current_level["@type"], value]
                 else:
-                    current_level["@type"] = [current_level["@type"], value]
+                    current_level["@type"] = value
             else:
-                current_level["@type"] = value
+                current_level['rdfs:comment'] = value
             break
 
         # Move to the next level in the path
@@ -79,6 +90,7 @@ def add_to_structure(jsonld, path, value, unit, data_container):
 
         # Ensure @type is set correctly for non-terminal connectors
         if not is_last and part in connectors:
+            print(f'pass the 90 loop, value: {value}, part: {part}')
             connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
             if not pd.isna(connector_type):
                 if "@type" not in current_level:
@@ -90,19 +102,25 @@ def add_to_structure(jsonld, path, value, unit, data_container):
                     else:
                         current_level["@type"] = [current_level["@type"], connector_type]
 
+
         # Handle the unit and value structure for the last item when unit is "No Unit"
         if is_second_last and unit == 'No Unit':
+            print(f'pass the 104 loop, value: {value}, part: {part}')
             next_part = path[idx + 1]
             if next_part not in current_level:
                 current_level[next_part] = {}
             current_level = current_level[next_part]
-            if "@type" in current_level:
-                if isinstance(current_level["@type"], list):
-                    current_level["@type"].append(value)
+            if value in unique_id['Item'].values:
+                current_level['@id'] = get_information_value(unique_id, 'ID', value, "Item")
+                if "@type" in current_level:
+                    if isinstance(current_level["@type"], list):
+                        current_level["@type"].append(value)
+                    else:
+                        current_level["@type"] = [current_level["@type"], value]
                 else:
-                    current_level["@type"] = [current_level["@type"], value]
+                    current_level["@type"] = value
             else:
-                current_level["@type"] = value
+                current_level['rdfs:comment'] = value
             break
 
 def create_jsonld_with_conditions(data_container: ExcelContainer):
@@ -113,10 +131,10 @@ def create_jsonld_with_conditions(data_container: ExcelContainer):
 
     jsonld = {
         "@context": ["https://w3id.org/emmo/domain/battery/context", {}],
-        "@type": get_information_value(row_name='Cell type', df=info),
-        "schema:version": get_information_value(row_name='BattINFO CoinCellSchema version', df=info),
-        "schemas:productID": get_information_value(row_name='Cell ID', df=info),
-        "schemas:dateCreated": str(get_information_value(row_name='Date of cell assembly', df=info)),
+        "@type": get_information_value(df=info, col_to_look='Key', row_to_look='Cell type', col_to_match='Item'),
+        "schema:version": get_information_value(df=info, col_to_look='Key', row_to_look='BattINFO CoinCellSchema version', col_to_match='Item'),
+        "schemas:productID": get_information_value(df=info, col_to_look='Key', row_to_look='Cell ID', col_to_match='Item'),
+        "schemas:dateCreated": str(get_information_value(df=info, col_to_look='Key', row_to_look='Date of cell assembly', col_to_match='Item')),
         "rdfs:comment": {}
     }
 
@@ -142,6 +160,8 @@ def create_jsonld_with_conditions(data_container: ExcelContainer):
     return jsonld
 
 def convert_excel_to_jsonld(excel_file):
+    print('Converting new Excel file')
+    print('\n')
     # Create an instance of ExcelContainer
     data_container = ExcelContainer(excel_file)
 
