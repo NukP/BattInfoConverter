@@ -2,9 +2,34 @@
 This moduel is used to handle Excel to JSON-LD conversion.
 """
 import pandas as pd
+from dataclasses import dataclass, field
 
 # Define the version of the app
 APP_VERSION = "0.3.0"
+
+@dataclass
+class ExcelContainer:
+    excel_file: str
+    data: dict = field(init=False)
+    
+    def __post_init__(self):
+        excel_data = pd.ExcelFile(self.excel_file)
+        self.data = {
+            "schema": pd.read_excel(excel_data, 'Schema').to_dict(),
+            "unit_map": pd.read_excel(excel_data, 'Ontology - Unit').set_index('Item').to_dict(orient='index'),
+            "context_toplevel": pd.read_excel(excel_data, '@context-TopLevel').to_dict(),
+            "context_connector": pd.read_excel(excel_data, '@context-Connector').to_dict(),
+            "info": pd.read_excel(excel_data, 'JSON - Info').to_dict(),
+            "unique_id": pd.read_excel(excel_data, 'Unique ID').to_dict()
+        }
+
+def convert_excel_to_jsonld(excel_file):
+    # Create an instance of ExcelContainer
+    data_container = ExcelContainer(excel_file)
+    # Access the data dictionary directly
+    jsonld_output = data_container.data
+    return jsonld_output
+
 
 def get_information_value(row_name, df, col_locator='Item'):
     """
@@ -12,27 +37,23 @@ def get_information_value(row_name, df, col_locator='Item'):
     """
     return df.loc[df[col_locator] == row_name, 'Key'].values[0]
 
-def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_connector):
+def add_to_structure(jsonld, path, value, unit, data_container: ExcelContainer):
     current_level = jsonld
+    unit_map = data_container.data['unit_map']
+    context_connector = data_container.data['context_connector']
+    connectors = set(context_connector['Item'])
 
-    # Iterate through the path to create or navigate the structure
     for idx, part in enumerate(path):
-        is_last = idx == len(path) - 1  # Check if current part is the last in the path
-        is_second_last = idx == len(path) - 2  # Check if current part is the second last in the path
+        is_last = idx == len(path) - 1
+        is_second_last = idx == len(path) - 2
 
-        # Initialize the current part if it doesn't exist
         if part not in current_level:
             if part in connectors:
-                # Assign the default @type for non-terminal connectors
                 connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
-                if pd.isna(connector_type):
-                    current_level[part] = {}
-                else:
-                    current_level[part] = {"@type": connector_type}
+                current_level[part] = {"@type": connector_type} if not pd.isna(connector_type) else {}
             else:
                 current_level[part] = {}
 
-        # Handle the unit and value structure for the second last item only when unit is not "No Unit"
         if is_second_last and unit != 'No Unit':
             if pd.isna(unit):
                 raise ValueError(f"The value '{value}' is filled in the wrong row, please check the schema")
@@ -47,7 +68,6 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
             }
             break
 
-        # Handle the last item normally when unit is "No Unit"
         if is_last and unit == 'No Unit':
             if "@type" in current_level:
                 if isinstance(current_level["@type"], list):
@@ -58,10 +78,8 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
                 current_level["@type"] = value
             break
 
-        # Move to the next level in the path
         current_level = current_level[part]
 
-        # Ensure @type is set correctly for non-terminal connectors
         if not is_last and part in connectors:
             connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
             if not pd.isna(connector_type):
@@ -74,7 +92,6 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
                     else:
                         current_level["@type"] = [current_level["@type"], connector_type]
 
-        # Handle the unit and value structure for the last item when unit is "No Unit"
         if is_second_last and unit == 'No Unit':
             next_part = path[idx + 1]
             if next_part not in current_level:
@@ -90,20 +107,13 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
             break
 
 
-def convert_excel_to_jsonld(excel_file):
-    excel_data = pd.ExcelFile(excel_file)
-    
-    schema = pd.read_excel(excel_data, 'Schema')
-    unit_map = pd.read_excel(excel_data, 'Ontology - Unit').set_index('Item').to_dict(orient='index')
-    context_toplevel = pd.read_excel(excel_data, '@context-TopLevel')
-    context_connector = pd.read_excel(excel_data, '@context-Connector')
-    info = pd.read_excel(excel_data, 'JSON - Info')
+def create_jsonld_with_conditions(data_container: ExcelContainer):
+    schema = data_container.data['schema']
+    info = data_container.data['info']
+    unit_map = data_container.data['unit_map']
+    context_toplevel = data_container.data['context_toplevel']
+    context_connector = data_container.data['context_connector']
 
-    jsonld_output = create_jsonld_with_conditions(schema, info, unit_map, context_toplevel, context_connector)
-    
-    return jsonld_output
-
-def create_jsonld_with_conditions(schema, info, unit_map, context_toplevel, context_connector):
     jsonld = {
         "@context": ["https://w3id.org/emmo/domain/battery/context", {}],
         "@type": get_information_value(row_name='Cell type', df=info),
@@ -113,15 +123,11 @@ def create_jsonld_with_conditions(schema, info, unit_map, context_toplevel, cont
         "rdfs:comment": {} 
     }
 
-    # Build the @context part
     for _, row in context_toplevel.iterrows():
         jsonld["@context"][1][row['Item']] = row['Key']
 
-    connectors = set()
-    for _, row in context_connector.iterrows():
-        connectors.add(row['Item'])  # Track connectors to avoid redefining types
+    connectors = set(context_connector['Item'])
 
-    # Process each schema entry to construct the JSON-LD output
     for _, row in schema.iterrows():
         if pd.isna(row['Value']) or row['Ontology link'] == 'NotOntologize':
             continue
@@ -132,9 +138,8 @@ def create_jsonld_with_conditions(schema, info, unit_map, context_toplevel, cont
             raise ValueError(f"The value '{row['Value']}' is filled in the wrong row, please check the schema")
 
         ontology_path = row['Ontology link'].split('-')
-        add_to_structure(jsonld, ontology_path, row['Value'], row['Unit'], connectors, unit_map, context_connector)
+        add_to_structure(jsonld, ontology_path, row['Value'], row['Unit'], data_container)
 
-    # Add the BattInfoConverter version comment
     jsonld["rdfs:comment"]["BattINFO Converter version"] = APP_VERSION
 
     return jsonld
