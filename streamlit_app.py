@@ -80,6 +80,8 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
     for idx, part in enumerate(path):
         is_last = idx == len(path) - 1  # Check if current part is the last in the path
         is_second_last = idx == len(path) - 2  # Check if current part is the second last in the path
+        #st.write(f"Value: {value}, | part: {part}, | is_second_last: {is_second_last}, | is_last: {is_last}")
+ 
 
         # Initialize the current part if it doesn't exist
         if part not in current_level:
@@ -93,7 +95,7 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
             else:
                 current_level[part] = {}
 
-        # Handle the unit and value structure for the second last item only when unit is not "No Unit"
+        # Handle the unit and value structure for the second last connector for item with Unit. 
         if is_second_last and unit != 'No Unit':
             if pd.isna(unit):
                 raise ValueError(f"The value '{value}' is filled in the wrong row, please check the schema")
@@ -108,7 +110,7 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
             }
             break
 
-        # Handle the last item normally when unit is "No Unit"
+        # # Handle the last item normally for "No unit" value
         if is_last and unit == 'No Unit':
             if value in unique_id['Item'].values:
                 item_id = unique_id.loc[unique_id['Item'] == value, 'ID'].values[0]
@@ -116,7 +118,7 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
                 if pd.notna(item_id):
                     current_level['@id'] = item_id
             else:
-                if "@type" in current_level:
+                if "@type" in current_level and value in unique_id['Item'].values:
                     if isinstance(current_level["@type"], list):
                         current_level["@type"].append(value)
                     else:
@@ -133,8 +135,9 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
 
         # Move to the next level in the path
         current_level = current_level[part]
+        st.write(current_level)
 
-        # Ensure @type is set correctly for non-terminal connectors
+        # # Ensure @type is set correctly for non-terminal connectors
         if not is_last and part in connectors:
             connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
             if not pd.isna(connector_type):
@@ -146,8 +149,6 @@ def add_to_structure(jsonld, path, value, unit, connectors, unit_map, context_co
                             current_level["@type"].append(connector_type)
                     else:
                         current_level["@type"] = [current_level["@type"], connector_type]
-
-
 
 
 def convert_excel_to_jsonld(excel_file):
