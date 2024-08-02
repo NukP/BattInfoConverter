@@ -38,8 +38,15 @@ def add_to_structure(jsonld, path, value, unit, data_container):
 
     # Iterate through the path to create or navigate the structure
     for idx, part in enumerate(path):
-        is_last = idx == len(path) - 1  # Check if current part is the last in the path
-        is_second_last = idx == len(path) - 2  # Check if current part is the second last in the path
+        # print('               ')
+        # print("Part: ", part)
+        # print('               ')
+        # print("Current Level: ", current_level)
+        # print('               ')
+        # print("value: ", value)
+        # print('               ')
+        is_last = idx == len(path) - 1
+        is_second_last = idx == len(path) - 2
 
         # Initialize the current part if it doesn't exist
         if part not in current_level:
@@ -59,14 +66,34 @@ def add_to_structure(jsonld, path, value, unit, data_container):
             if pd.isna(unit):
                 raise ValueError(f"The value '{value}' is filled in the wrong row, please check the schema")
             unit_info = unit_map[unit]
-            current_level[part] = {
-                "@type": path[-1],
-                "hasNumericalPart": {
-                    "@type": "emmo:Real",
-                    "hasNumericalValue": value
-                },
-                "hasMeasurementUnit": unit_info['Key']
-            }
+            if part not in current_level or not isinstance(current_level[part], dict):
+                current_level[part] = {
+                    "@type": path[-1],
+                    "hasNumericalPart": {
+                        "@type": "emmo:Real",
+                        "hasNumericalValue": value
+                    },
+                    "hasMeasurementUnit": unit_info['Key']
+                }
+            else:
+                # Handle existing structure without overwriting
+                if 'hasNumericalPart' in current_level[part]:
+                    if not isinstance(current_level[part]['hasNumericalPart'], list):
+                        current_level[part]['hasNumericalPart'] = [current_level[part]['hasNumericalPart']]
+                    current_level[part]['hasNumericalPart'].append({
+                        "@type": "emmo:Real",
+                        "hasNumericalValue": value
+                    })
+                    current_level[part]['hasMeasurementUnit'] = unit_info['Key']
+                else:
+                    current_level[part].update({
+                        "@type": path[-1],
+                        "hasNumericalPart": {
+                            "@type": "emmo:Real",
+                            "hasNumericalValue": value
+                        },
+                        "hasMeasurementUnit": unit_info['Key']
+                    })
             break
 
         # Handle the last item normally when unit is "No Unit" -- Fix here for the issue with unique id
@@ -120,11 +147,14 @@ def add_to_structure(jsonld, path, value, unit, data_container):
                     else:
                         current_level["@type"] = [current_level["@type"], value]
                 else:
+                    print('Next Part: ', next_part)
                     connector_type = context_connector.loc[context_connector['Item'] == next_part, 'Key'].values[0]
                     current_level["@type"] = [value, connector_type]  # Ensure '@type' is always a list including default connector type
             else:
                 current_level['rdfs:comment'] = value
             break
+
+
 
 
 
@@ -159,7 +189,6 @@ def create_jsonld_with_conditions(data_container: ExcelContainer):
 
         ontology_path = row['Ontology link'].split('-')
         add_to_structure(jsonld, ontology_path, row['Value'], row['Unit'], data_container)
-
     jsonld["rdfs:comment"]["BattINFO Converter version"] = APP_VERSION
 
     return jsonld
