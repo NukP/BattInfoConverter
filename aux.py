@@ -1,4 +1,7 @@
+import pandas as pd
+
 def add_to_structure(jsonld, path, value, unit, data_container):
+    from json_convert import get_information_value
     try:
         current_level = jsonld
         unit_map = data_container.data['unit_map'].set_index('Item').to_dict(orient='index')
@@ -35,33 +38,48 @@ def add_to_structure(jsonld, path, value, unit, data_container):
                     else:
                         current_level[part] = {}
 
-            # Logic for adding numerical part
-            if is_second_last and 'hasNumericalPart' in path:
-                new_entry = {
-                    "@type": path[-1],
-                    "hasNumericalPart": {
-                        "@type": "emmo:Real",
-                        "hasNumericalValue": value
+                current_level = current_level[part]
+
+            if is_second_last:
+                if 'hasNumericalPart' in path or (unit != 'No Unit' and not pd.isna(unit)):
+                    # Logic for adding numerical part
+                    new_entry = {
+                        "@type": path[-1],
+                        "hasNumericalPart": {
+                            "@type": "emmo:Real",
+                            "hasNumericalValue": value
+                        }
                     }
-                }
-                if unit != 'No Unit':
-                    if pd.isna(unit):
-                        raise ValueError(f"The value '{value}' is filled in the wrong row, please check the schema")
-                    unit_info = unit_map[unit]
-                    new_entry["hasMeasurementUnit"] = unit_info['Key']
+                    if unit != 'No Unit' and not pd.isna(unit):
+                        unit_info = unit_map[unit]
+                        new_entry["hasMeasurementUnit"] = unit_info['Key']
 
-                print(f'New entry (numerical): {new_entry}')  # Debugging line
+                    print(f'New entry (numerical): {new_entry}')  # Debugging line
 
-                if isinstance(current_level[part], list):
-                    current_level[part].append(new_entry)
+                    if part in current_level:
+                        if isinstance(current_level[part], list):
+                            current_level[part].append(new_entry)
+                        else:
+                            existing_entry = current_level[part]
+                            current_level[part] = [existing_entry, new_entry]
+                    else:
+                        current_level[part] = [new_entry]
                 else:
-                    existing_entry = current_level[part]
-                    current_level[part] = [existing_entry, new_entry]
+                    # Logic for adding non-numerical parts
+                    new_entry = {"@type": path[-1], "value": value}
+                    print(f'New entry (non-numerical): {new_entry}')  # Debugging line
 
-                current_level = [item for item in current_level if item != {}]
+                    if part in current_level:
+                        if isinstance(current_level[part], list):
+                            current_level[part].append(new_entry)
+                        else:
+                            existing_entry = current_level[part]
+                            current_level[part] = [existing_entry, new_entry]
+                    else:
+                        current_level[part] = [new_entry]
+
                 break
 
-            # Logic for adding non-numerical parts
             if is_last and unit == 'No Unit':
                 if value in unique_id['Item'].values:
                     if "@type" in current_level:
@@ -77,8 +95,6 @@ def add_to_structure(jsonld, path, value, unit, data_container):
                 else:
                     current_level['rdfs:comment'] = value
                 break
-
-            current_level = current_level[part]
 
             if not is_last and part in connectors:
                 connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
