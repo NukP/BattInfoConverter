@@ -14,57 +14,48 @@ def add_to_structure(jsonld, path, value, unit, data_container):
             is_last = idx == len(path) - 1
             is_second_last = idx == len(path) - 2
 
-            if isinstance(current_level, list):
-                found = False
-                for item in current_level:
-                    if isinstance(item, dict) and part in item:
-                        current_level = item[part]
-                        found = True
-                        break
-                if not found:
-                    new_entry = {part: {}}
-                    current_level.append(new_entry)
-                    current_level = new_entry[part]
-            else:
-                if part not in current_level:
-                    if part in connectors:
-                        connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
-                        if pd.isna(connector_type):
-                            current_level[part] = {}
-                        else:
-                            current_level[part] = {"@type": connector_type}
-                    else:
+            if part not in current_level:
+                if part in connectors:
+                    connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
+                    if pd.isna(connector_type):
                         current_level[part] = {}
+                    else:
+                        current_level[part] = {"@type": connector_type}
+                else:
+                    current_level[part] = {}
 
             if is_second_last and unit != 'No Unit':
-                print(f'pass loop line 52, part: {part}')
                 if pd.isna(unit):
                     raise ValueError(f"The value '{value}' is filled in the wrong row, please check the schema")
                 unit_info = unit_map[unit]
-
-                new_entry = {
-                    "@type": path[-1],
-                    "hasNumericalPart": {
-                        "@type": "emmo:Real",
-                        "hasNumericalValue": value
-                    },
-                    "hasMeasurementUnit": unit_info['Key']
-                }
-
-                # Check if the part already exists and should be a list
-                if part in current_level:
-                    if isinstance(current_level[part], list):
-                        current_level[part].append(new_entry)
-                    else:
-                        # Ensure we do not overwrite non-dictionary values
-                        existing_entry = current_level[part]
-                        current_level[part] = [existing_entry, new_entry]
+                if part not in current_level or not isinstance(current_level[part], dict):
+                    current_level[part] = {
+                        "@type": path[-1],
+                        "hasNumericalPart": {
+                            "@type": "emmo:Real",
+                            "hasNumericalValue": value
+                        },
+                        "hasMeasurementUnit": unit_info['Key']
+                    }
                 else:
-                    current_level[part] = [new_entry]
-
-                # Clean up any empty dictionaries in the list
-                if isinstance(current_level[part], list):
-                    current_level[part] = [item for item in current_level[part] if item != {}]
+                    # Handle existing structure without overwriting
+                    if 'hasNumericalPart' in current_level[part]:
+                        if not isinstance(current_level[part]['hasNumericalPart'], list):
+                            current_level[part]['hasNumericalPart'] = [current_level[part]['hasNumericalPart']]
+                        current_level[part]['hasNumericalPart'].append({
+                            "@type": "emmo:Real",
+                            "hasNumericalValue": value
+                        })
+                        current_level[part]['hasMeasurementUnit'] = unit_info['Key']
+                    else:
+                        current_level[part].update({
+                            "@type": path[-1],
+                            "hasNumericalPart": {
+                                "@type": "emmo:Real",
+                                "hasNumericalValue": value
+                            },
+                            "hasMeasurementUnit": unit_info['Key']
+                        })
                 break
 
             if is_second_last and unit == 'No Unit':
@@ -76,18 +67,15 @@ def add_to_structure(jsonld, path, value, unit, data_container):
                     }
                 }
 
-                # Check if the part already exists and should be a list
                 if part in current_level:
                     if isinstance(current_level[part], list):
                         current_level[part].append(new_entry)
                     else:
-                        # Ensure we do not overwrite non-dictionary values
                         existing_entry = current_level[part]
                         current_level[part] = [existing_entry, new_entry]
                 else:
                     current_level[part] = [new_entry]
 
-                # Clean up any empty dictionaries in the list
                 if isinstance(current_level[part], list):
                     current_level[part] = [item for item in current_level[part] if item != {}]
                 break
@@ -108,34 +96,28 @@ def add_to_structure(jsonld, path, value, unit, data_container):
                     current_level['rdfs:comment'] = value
                 break
 
-            if isinstance(current_level, list):
-                found = False
-                for item in current_level:
-                    if isinstance(item, dict) and part in item:
-                        current_level = item[part]
-                        found = True
-                        break
-                if not found:
-                    raise KeyError(f"Part {part} not found in current_level.")
-            else:
-                current_level = current_level[part]
+            current_level = current_level[part]
 
             if not is_last and part in connectors:
-                print(f'pass loop line 104, part: {part}')
                 connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
                 if not pd.isna(connector_type):
-                    if isinstance(current_level, dict):
-                        if "@type" not in current_level:
-                            current_level["@type"] = connector_type
-                        elif current_level["@type"] != connector_type:
-                            if isinstance(current_level["@type"], list):
-                                if connector_type not in current_level["@type"]:
-                                    current_level["@type"].append(connector_type)
-                            else:
-                                current_level["@type"] = [current_level["@type"], connector_type]
-                    else:
-                        # Handle the case where current_level is a list if necessary
-                        print(f'Error: current_level is a list at part: {part}, path: {path}')
+                    print('DUBUGGGGGGG')
+                    # Print the value and then the type of current_level["@type"]
+                    print("current_level['@type'] value:", current_level["@type"])
+                    print("current_level['@type'] type:", type(current_level["@type"]))
+
+                    # Print the value and then the type of connector_type
+                    print("connector_type value:", connector_type)
+                    print("connector_type type:", type(connector_type))
+                    print('End of debugging')
+                    if "@type" not in current_level:
+                        current_level["@type"] = connector_type
+                    elif current_level["@type"] != connector_type:
+                        if isinstance(current_level["@type"], list):
+                            if connector_type not in current_level["@type"]:
+                                current_level["@type"].append(connector_type)
+                        else:
+                            current_level["@type"] = [current_level["@type"], connector_type]
 
             if is_second_last and unit == 'No Unit':
                 next_part = path[idx + 1]
