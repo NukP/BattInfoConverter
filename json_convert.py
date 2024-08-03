@@ -136,7 +136,7 @@ def add_to_structure(jsonld, path, value, unit, data_container):
                     current_level['rdfs:comment'] = value
                 break
     except Exception as e:
-        return {"WARNING!! error": str(e), "value": value, "path": path}
+        raise RuntimeError(f"Error occurred with value '{value}' and path '{path}': {str(e)}")
 
 def create_jsonld_with_conditions(data_container: ExcelContainer):
     schema = data_container.data['schema']
