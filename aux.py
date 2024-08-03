@@ -1,4 +1,5 @@
 import pandas as pd
+import traceback
 
 def add_to_structure(jsonld, path, value, unit, data_container):
     from json_convert import get_information_value
@@ -12,9 +13,6 @@ def add_to_structure(jsonld, path, value, unit, data_container):
         for idx, part in enumerate(path):
             is_last = idx == len(path) - 1
             is_second_last = idx == len(path) - 2
-
-            print(f'Current level: {current_level}')  # Debugging line
-            print(f'Part: {part}')  # Debugging line
 
             if isinstance(current_level, list):
                 found = False
@@ -38,46 +36,60 @@ def add_to_structure(jsonld, path, value, unit, data_container):
                     else:
                         current_level[part] = {}
 
-                current_level = current_level[part]
+            if is_second_last and unit != 'No Unit':
+                print(f'pass loop line 52, part: {part}')
+                if pd.isna(unit):
+                    raise ValueError(f"The value '{value}' is filled in the wrong row, please check the schema")
+                unit_info = unit_map[unit]
 
-            if is_second_last:
-                if 'hasNumericalPart' in path or (unit != 'No Unit' and not pd.isna(unit)):
-                    # Logic for adding numerical part
-                    new_entry = {
-                        "@type": path[-1],
-                        "hasNumericalPart": {
-                            "@type": "emmo:Real",
-                            "hasNumericalValue": value
-                        }
-                    }
-                    if unit != 'No Unit' and not pd.isna(unit):
-                        unit_info = unit_map[unit]
-                        new_entry["hasMeasurementUnit"] = unit_info['Key']
+                new_entry = {
+                    "@type": path[-1],
+                    "hasNumericalPart": {
+                        "@type": "emmo:Real",
+                        "hasNumericalValue": value
+                    },
+                    "hasMeasurementUnit": unit_info['Key']
+                }
 
-                    print(f'New entry (numerical): {new_entry}')  # Debugging line
-
-                    if part in current_level:
-                        if isinstance(current_level[part], list):
-                            current_level[part].append(new_entry)
-                        else:
-                            existing_entry = current_level[part]
-                            current_level[part] = [existing_entry, new_entry]
+                # Check if the part already exists and should be a list
+                if part in current_level:
+                    if isinstance(current_level[part], list):
+                        current_level[part].append(new_entry)
                     else:
-                        current_level[part] = [new_entry]
+                        # Ensure we do not overwrite non-dictionary values
+                        existing_entry = current_level[part]
+                        current_level[part] = [existing_entry, new_entry]
                 else:
-                    # Logic for adding non-numerical parts
-                    new_entry = {"@type": path[-1], "value": value}
-                    print(f'New entry (non-numerical): {new_entry}')  # Debugging line
+                    current_level[part] = [new_entry]
 
-                    if part in current_level:
-                        if isinstance(current_level[part], list):
-                            current_level[part].append(new_entry)
-                        else:
-                            existing_entry = current_level[part]
-                            current_level[part] = [existing_entry, new_entry]
+                # Clean up any empty dictionaries in the list
+                if isinstance(current_level[part], list):
+                    current_level[part] = [item for item in current_level[part] if item != {}]
+                break
+
+            if is_second_last and unit == 'No Unit':
+                new_entry = {
+                    "@type": path[-1],
+                    "hasNumericalPart": {
+                        "@type": "emmo:Real",
+                        "hasNumericalValue": value
+                    }
+                }
+
+                # Check if the part already exists and should be a list
+                if part in current_level:
+                    if isinstance(current_level[part], list):
+                        current_level[part].append(new_entry)
                     else:
-                        current_level[part] = [new_entry]
+                        # Ensure we do not overwrite non-dictionary values
+                        existing_entry = current_level[part]
+                        current_level[part] = [existing_entry, new_entry]
+                else:
+                    current_level[part] = [new_entry]
 
+                # Clean up any empty dictionaries in the list
+                if isinstance(current_level[part], list):
+                    current_level[part] = [item for item in current_level[part] if item != {}]
                 break
 
             if is_last and unit == 'No Unit':
@@ -96,17 +108,34 @@ def add_to_structure(jsonld, path, value, unit, data_container):
                     current_level['rdfs:comment'] = value
                 break
 
+            if isinstance(current_level, list):
+                found = False
+                for item in current_level:
+                    if isinstance(item, dict) and part in item:
+                        current_level = item[part]
+                        found = True
+                        break
+                if not found:
+                    raise KeyError(f"Part {part} not found in current_level.")
+            else:
+                current_level = current_level[part]
+
             if not is_last and part in connectors:
+                print(f'pass loop line 104, part: {part}')
                 connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
                 if not pd.isna(connector_type):
-                    if "@type" not in current_level:
-                        current_level["@type"] = connector_type
-                    elif current_level["@type"] != connector_type:
-                        if isinstance(current_level["@type"], list):
-                            if connector_type not in current_level["@type"]:
-                                current_level["@type"].append(connector_type)
-                        else:
-                            current_level["@type"] = [current_level["@type"], connector_type]
+                    if isinstance(current_level, dict):
+                        if "@type" not in current_level:
+                            current_level["@type"] = connector_type
+                        elif current_level["@type"] != connector_type:
+                            if isinstance(current_level["@type"], list):
+                                if connector_type not in current_level["@type"]:
+                                    current_level["@type"].append(connector_type)
+                            else:
+                                current_level["@type"] = [current_level["@type"], connector_type]
+                    else:
+                        # Handle the case where current_level is a list if necessary
+                        print(f'Error: current_level is a list at part: {part}, path: {path}')
 
             if is_second_last and unit == 'No Unit':
                 next_part = path[idx + 1]
@@ -137,5 +166,5 @@ def add_to_structure(jsonld, path, value, unit, data_container):
                     current_level['rdfs:comment'] = value
                 break
     except Exception as e:
-        print(f'Error details: current_level={current_level}, part={part}, path={path}')  # Debugging line
+        traceback.print_exc()  # Print the full traceback
         raise RuntimeError(f"Error occurred with value '{value}' and path '{path}': {str(e)}")
