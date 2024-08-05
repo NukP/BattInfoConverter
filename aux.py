@@ -23,9 +23,26 @@ def add_to_structure(jsonld, path, value, unit, data_container):
                         current_level[part] = {"@type": connector_type}
                 else:
                     current_level[part] = {}
+            
+            #Handle the case of the single path.
+            if len(path) == 1 and unit == 'No Unit':
+                print('Pass line 28, vakue: ', value)
+                if value in unique_id['Item'].values:
+                    if "@type" in current_level:
+                        if isinstance(current_level["@type"], list):
+                            if not pd.isna(value):
+                                current_level[part]["@type"].append(value)
+                        else:
+                            if not pd.isna(value):
+                                current_level[part]["@type"] = [current_level["@type"], value]
+                    else:
+                        if not pd.isna(value):
+                            current_level[part]["@type"] = value
+                else:
+                    current_level[part]['rdfs:comment'] = value
+                break
 
             if is_second_last and unit != 'No Unit':
-                print(f'pass loop line 52, part: {part}')
                 if pd.isna(unit):
                     raise ValueError(f"The value '{value}' is filled in the wrong row, please check the schema")
                 unit_info = unit_map[unit]
@@ -74,7 +91,6 @@ def add_to_structure(jsonld, path, value, unit, data_container):
             current_level = current_level[part]
 
             if not is_last and part in connectors:
-                print(f'pass loop line 104, part: {part}')
                 connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
                 if not pd.isna(connector_type):
                     if "@type" not in current_level:
