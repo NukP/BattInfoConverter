@@ -63,6 +63,7 @@ def create_jsonld_with_conditions(data_container: ExcelContainer):
         ontology_path = row['Ontology link'].split('-')
         aux.add_to_structure(jsonld, ontology_path, row['Value'], row['Unit'], data_container)
     jsonld["rdfs:comment"]["BattINFO Converter version"] = APP_VERSION
+    jsonld["rdfs:comment"]["Software credit"] = f"This JSON-LD was created using Battconverter (https://battinfoconverter.streamlit.app/) version: {APP_VERSION} and the schema version: {jsonld['schema:version']}, this web application was developed at Empa, Swiss Federal Laboratories for Materials Science and Technology in Material for Energy Conversion lab"
 
     return jsonld
 
