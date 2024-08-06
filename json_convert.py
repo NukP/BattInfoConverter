@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 import pandas as pd
 import streamlit as st
-import aux 
+import auxiliary as aux 
 import datetime
 
 APP_VERSION = "0.4.0"
