@@ -103,9 +103,17 @@ def add_to_structure(jsonld, path, value, unit, data_container):
 
             if is_second_last and unit == 'No Unit':
                 next_part = path[idx + 1]
-                if next_part not in current_level:
+                if next_part not in current_level and not isinstance(current_level, list):
+                    print('passing line 107, current_level:', current_level)
+                    # print('                   ')
+                    # print('next_part:', next_part)
+                    # #print('current_level[next_part]:', current_level[next_part])
+                    # print('                   ')
                     current_level[next_part] = {}
+                print('next_part:', next_part)
+                print('current_level:', current_level)
                 current_level = current_level[next_part]
+                #print('curent_level[next_part]:', current_level[next_part])
                 if value in unique_id['Item'].values:
                     unique_id_of_value = get_information_value(unique_id, 'ID', value, "Item")
                     if not pd.isna(unique_id_of_value):
