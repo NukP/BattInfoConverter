@@ -26,19 +26,25 @@ def add_to_structure(jsonld, path, value, unit, data_container):
             
             #Handle the case of the single path.
             if len(path) == 1 and unit == 'No Unit':
-                print('Pass line 28, vakue: ', value)
                 if value in unique_id['Item'].values:
                     if "@type" in current_level:
+                        print('current_level[@type] is ',current_level["@type"])
+                        #print('current_level[part][@type] is ',current_level[part]['@type'])
                         if isinstance(current_level["@type"], list):
                             if not pd.isna(value):
+                                print('pass line 32, value:', value)
                                 current_level[part]["@type"].append(value)
                         else:
                             if not pd.isna(value):
-                                current_level[part]["@type"] = [current_level["@type"], value]
+                                print('at line 39, current_level[part] is ',current_level[part])
+                                current_level[part]["@type"] = [value]
+                                print('at line 40, current_level[part] is ',current_level[part])
                     else:
                         if not pd.isna(value):
+                            print('pass line 38, value:', value)
                             current_level[part]["@type"] = value
                 else:
+                    print('pass line 43, value:', value)
                     current_level[part]['rdfs:comment'] = value
                 break
 
