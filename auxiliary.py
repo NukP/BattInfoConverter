@@ -26,6 +26,7 @@ def add_to_structure(jsonld, path, value, unit, data_container):
             
             #Handle the case of the single path.
             if len(path) == 1 and unit == 'No Unit':
+                print('pass line 28, value:', value)
                 if value in unique_id['Item'].values:
                     if "@type" in current_level:
                         if "@type" in current_level[part] and isinstance(current_level[part]["@type"], list):
@@ -42,6 +43,7 @@ def add_to_structure(jsonld, path, value, unit, data_container):
                 break
 
             if is_second_last and unit != 'No Unit':
+                print('pass line 45, value:', value)
                 if pd.isna(unit):
                     raise ValueError(f"The value '{value}' is filled in the wrong row, please check the schema")
                 unit_info = unit_map[unit]
@@ -72,6 +74,7 @@ def add_to_structure(jsonld, path, value, unit, data_container):
                 break
 
             if is_last and unit == 'No Unit':
+                print('pass line 76, value:', value)
                 if value in unique_id['Item'].values:
                     if "@type" in current_level:
                         if isinstance(current_level["@type"], list):
@@ -90,6 +93,7 @@ def add_to_structure(jsonld, path, value, unit, data_container):
             current_level = current_level[part]
 
             if not is_last and part in connectors:
+                print('pass line 93, value:', value)
                 connector_type = context_connector.loc[context_connector['Item'] == part, 'Key'].values[0]
                 if not pd.isna(connector_type):
                     if "@type" not in current_level:
@@ -102,41 +106,33 @@ def add_to_structure(jsonld, path, value, unit, data_container):
                             current_level["@type"] = [current_level["@type"], connector_type]
 
             if is_second_last and unit == 'No Unit':
+                print('pass line 106, value:', value)
                 next_part = path[idx + 1]
                 if isinstance(current_level, dict):
                     if next_part not in current_level:
                         current_level[next_part] = {}
-                    elif isinstance(current_level[next_part], list):
-                        current_level[next_part].append({})
-                        current_level = current_level[next_part][-1]
-                    else:
-                        current_level = current_level[next_part]
+                    current_level = current_level[next_part]
                 elif isinstance(current_level, list):
                     current_level.append({next_part: {}})
                     current_level = current_level[-1][next_part]
+
                 if value in unique_id['Item'].values:
                     unique_id_of_value = get_information_value(unique_id, 'ID', value, "Item")
                     if not pd.isna(unique_id_of_value):
                         current_level['@id'] = unique_id_of_value
-                    if "@type" in current_level:
-                        if isinstance(current_level["@type"], list):
-                            if not pd.isna(value):
+                    
+                    if not pd.isna(value):
+                        if "@type" in current_level:
+                            if isinstance(current_level["@type"], list):
                                 current_level["@type"].append(value)
-                        else:
-                            if not pd.isna(value):
-                                current_level["@type"] = [current_level["@type"], value]
-                    else:
-                        if not context_connector[context_connector['Item'] == next_part].empty:
-                            connector_type = context_connector.loc[context_connector['Item'] == next_part, 'Key'].values[0]
-                            if not pd.isna(connector_type):
-                                current_level["@type"] = [value, connector_type]
                             else:
-                                current_level["@type"] = value
+                                current_level["@type"] = [current_level["@type"], value]
                         else:
                             current_level["@type"] = value
                 else:
                     current_level['rdfs:comment'] = value
                 break
+
     except Exception as e:
         traceback.print_exc()  # Print the full traceback
         raise RuntimeError(f"Error occurred with value '{value}' and path '{path}': {str(e)}")
