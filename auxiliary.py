@@ -161,14 +161,19 @@ def add_to_structure(jsonld, path, value, unit, data_container):
     except Exception as e:
         traceback.print_exc()  # Print the full traceback
         raise RuntimeError(f"Error occurred with value '{value}' and path '{path}': {str(e)}")
-    
-def plf(value, part, current_level = None):
+
+
+def plf(value, part, current_level = None, debug_switch = False):
     """Print Line Function.
     This function is used for debugging.
     """
-    current_frame = inspect.currentframe()
-    line_number = current_frame.f_back.f_lineno
-    if current_level is not None:
-        print(f'pass line {line_number}, value:', value,'AND part:', part, 'AND current_level:', current_level)
+    if debug_switch:
+        current_frame = inspect.currentframe()
+        line_number = current_frame.f_back.f_lineno
+        if current_level is not None:
+            print(f'pass line {line_number}, value:', value,'AND part:', part, 'AND current_level:', current_level)
+        else:
+            print(f'pass line {line_number}, value:', value,'AND part:', part)
     else:
-        print(f'pass line {line_number}, value:', value,'AND part:', part)
+        pass 
+
