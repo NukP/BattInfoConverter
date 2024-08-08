@@ -12,7 +12,13 @@ def add_to_structure(jsonld, path, value, unit, data_container):
         connectors = set(context_connector['Item'])
         unique_id = data_container.data['unique_id']
 
-        for idx, part in enumerate(path):
+        for idx, parts in enumerate(path):
+            if len(parts.split('|')) == 1:
+                part = parts
+            elif len(parts.split('|')) == 2:
+                special_command, part = parts.split('|')
+            else:
+                raise ValueError(f"Invalid JSON-LD at: {parts} in {path}")
             is_last = idx == len(path) - 1
             is_second_last = idx == len(path) - 2
 
