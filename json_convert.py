@@ -4,7 +4,7 @@ import streamlit as st
 import auxiliary as aux 
 import datetime
 
-APP_VERSION = "0.4.0"
+APP_VERSION = "0.5.0"
 
 @dataclass
 class ExcelContainer:
