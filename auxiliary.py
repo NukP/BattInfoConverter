@@ -5,6 +5,7 @@ import inspect
 def add_to_structure(jsonld, path, value, unit, data_container):
     from json_convert import get_information_value
     try:
+        print('               ') # To add space between each Excel row - for debugging.
         current_level = jsonld
         unit_map = data_container.data['unit_map'].set_index('Item').to_dict(orient='index')
         context_connector = data_container.data['context_connector']
@@ -163,7 +164,7 @@ def add_to_structure(jsonld, path, value, unit, data_container):
         raise RuntimeError(f"Error occurred with value '{value}' and path '{path}': {str(e)}")
 
 
-def plf(value, part, current_level = None, debug_switch = False):
+def plf(value, part, current_level = None, debug_switch = True):
     """Print Line Function.
     This function is used for debugging.
     """
