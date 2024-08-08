@@ -15,10 +15,20 @@ def add_to_structure(jsonld, path, value, unit, data_container):
         for idx, parts in enumerate(path):
             if len(parts.split('|')) == 1:
                 part = parts
+                special_command = None
+                plf(value, part)
             elif len(parts.split('|')) == 2:
                 special_command, part = parts.split('|')
+                plf(value, part)
+                if special_command == "rev":
+                    plf(value, part)
+                    if "@reverse" not in current_level:
+                        plf(value, part)
+                        current_level["@reverse"] = {}
+                    current_level = current_level["@reverse"] ; plf(value, part)
             else:
                 raise ValueError(f"Invalid JSON-LD at: {parts} in {path}")
+            
             is_last = idx == len(path) - 1
             is_second_last = idx == len(path) - 2
 
