@@ -16,12 +16,16 @@ While the benefits of this process are clear, it can often be a daunting task in
 With this in mind, we've developed an BattINFO converter web application designed to streamline and expedite this intricate task,
 making it more manageable for you and your team.
 
-BattINFO converter helps you ontologize metadata for coin cell battery based on [BattINFO](https://big-map.github.io/BattINFO/index.html) ontology. 
+BattINFO converter helps you ontologize metadata for coin cell battery based on
+ [BattINFO](https://big-map.github.io/BattINFO/index.html) ontology. 
 
-__For additional information and example Excel metadata files, please click the respective link on the left__
+<p style="color:orange; font-size:15px;">For additional information and example Excel metadata files,
+ please click the respective link on the left</p>
 
 # Acknowledgement 
-BattINFO converter web application was developed at [Empa](https://www.empa.ch/), Swiss Federal Laboratories for Materials Science and Technology in [Material for Energy Conversion lab](https://www.empa.ch/web/s501).  
+BattINFO converter web application was developed at [Empa](https://www.empa.ch/),
+Swiss Federal Laboratories for Materials Science and Technology in
+[Material for Energy Conversion lab](https://www.empa.ch/web/s501).  
 
 
 We acknowledge stimulating discussions and support from Dr Simon Clark, SINTEF, Norway.
