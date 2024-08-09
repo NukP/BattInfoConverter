@@ -4,7 +4,7 @@ import streamlit as st
 import auxiliary as aux 
 import datetime
 
-APP_VERSION = "0.5.0"
+APP_VERSION = "0.6.0"
 
 @dataclass
 class ExcelContainer:
@@ -68,9 +68,6 @@ def create_jsonld_with_conditions(data_container: ExcelContainer):
     return jsonld
 
 def convert_excel_to_jsonld(excel_file):
-    #print('Converting new Excel file')
-    #print('\n')
-    # Create an instance of ExcelContainer
     print('*********************************************************')
     print(f"Initialize new session of Excel file conversion, started at {datetime.datetime.now()}")
     print('*********************************************************')
