@@ -3,6 +3,7 @@ import pandas as pd
 import streamlit as st
 import auxiliary as aux 
 import datetime
+from pandas import DataFrame
 
 APP_VERSION = "0.6.0"
 
@@ -22,10 +23,18 @@ class ExcelContainer:
             "unique_id": pd.read_excel(excel_data, 'Unique ID')
         }
 
-def get_information_value(df, col_to_look, row_to_look, col_to_match):
+def get_information_value(df: DataFrame, row_to_look: str, col_to_look: str = "Key", col_to_match: str = "Item") -> str | None:
     """
-    Return the value of a column "col_to_look" at the row where the column "col_to_match" is equal to row_to_look.
-    If no match is found, return None.
+    Retrieves the value from a specified column where a different column matches a given value.
+
+    Parameters:
+    df (DataFrame): The DataFrame to search within.
+    row_to_look (str): The value to match within the column specified by col_to_match.
+    col_to_look (str): The name of the column from which to retrieve the value. Default is "Key".
+    col_to_match (str): The name of the column to search for row_to_look. Default is "Item".
+
+    Returns:
+    str | None: The value from the column col_to_look if a match is found; otherwise, None.
     """
     result = df.query(f"{col_to_match} == @row_to_look")[col_to_look]
     return result.iloc[0] if not result.empty else None
@@ -67,7 +76,7 @@ def create_jsonld_with_conditions(data_container: ExcelContainer):
 
     return jsonld
 
-def convert_excel_to_jsonld(excel_file):
+def convert_excel_to_jsonld(excel_file: ExcelContainer):
     print('*********************************************************')
     print(f"Initialize new session of Excel file conversion, started at {datetime.datetime.now()}")
     print('*********************************************************')
