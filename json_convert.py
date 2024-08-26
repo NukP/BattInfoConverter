@@ -23,7 +23,7 @@ class ExcelContainer:
             "unique_id": pd.read_excel(excel_data, 'Unique ID')
         }
 
-def get_information_value(df: DataFrame, row_to_look: str, col_to_look: str = "Key", col_to_match: str = "Item") -> str | None:
+def get_information_value(df: DataFrame, row_to_look: str, col_to_look: str = "Value", col_to_match: str = "Metadata") -> str | None:
     """
     Retrieves the value from a specified column where a different column matches a given value.
 
@@ -48,10 +48,10 @@ def create_jsonld_with_conditions(data_container: ExcelContainer):
 
     jsonld = {
         "@context": ["https://w3id.org/emmo/domain/battery/context", {}],
-        "@type": get_information_value(df=info, row_to_look='Cell type'),
-        "schema:version": get_information_value(df=info, row_to_look='BattINFO CoinCellSchema version'),
-        "schemas:productID": get_information_value(df=info, row_to_look='Cell ID'),
-        "schemas:dateCreated": str(get_information_value(df=info, row_to_look='Date of cell assembly')),
+        "@type": get_information_value(df=schema, row_to_look='Cell type'),
+        # "schema:version": get_information_value(df=info, row_to_look='BattINFO CoinCellSchema version'),
+        # "schemas:productID": get_information_value(df=info, row_to_look='Cell ID'),
+        # "schemas:dateCreated": str(get_information_value(df=info, row_to_look='Date of cell assembly')),
         "rdfs:comment": {}
     }
 
@@ -72,7 +72,7 @@ def create_jsonld_with_conditions(data_container: ExcelContainer):
         ontology_path = row['Ontology link'].split('-')
         aux.add_to_structure(jsonld, ontology_path, row['Value'], row['Unit'], data_container)
     jsonld["rdfs:comment"]["BattINFO Converter version"] = APP_VERSION
-    jsonld["rdfs:comment"]["Software credit"] = f"This JSON-LD was created using Battconverter (https://battinfoconverter.streamlit.app/) version: {APP_VERSION} and the schema version: {jsonld['schema:version']}, this web application was developed at Empa, Swiss Federal Laboratories for Materials Science and Technology in the Laboratory Materials for Energy Conversion lab"
+    #jsonld["rdfs:comment"]["Software credit"] = f"This JSON-LD was created using Battconverter (https://battinfoconverter.streamlit.app/) version: {APP_VERSION} and the schema version: {jsonld['schema:version']}, this web application was developed at Empa, Swiss Federal Laboratories for Materials Science and Technology in the Laboratory Materials for Energy Conversion lab"
 
     return jsonld
 
