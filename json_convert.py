@@ -48,10 +48,10 @@ def create_jsonld_with_conditions(data_container: ExcelContainer):
 
     jsonld = {
         "@context": ["https://w3id.org/emmo/domain/battery/context", {}],
-        "@type": get_information_value(df=info, col_to_look='Key', row_to_look='Cell type', col_to_match='Item'),
-        "schema:version": get_information_value(df=info, col_to_look='Key', row_to_look='BattINFO CoinCellSchema version', col_to_match='Item'),
-        "schemas:productID": get_information_value(df=info, col_to_look='Key', row_to_look='Cell ID', col_to_match='Item'),
-        "schemas:dateCreated": str(get_information_value(df=info, col_to_look='Key', row_to_look='Date of cell assembly', col_to_match='Item')),
+        "@type": get_information_value(df=info, row_to_look='Cell type'),
+        "schema:version": get_information_value(df=info, row_to_look='BattINFO CoinCellSchema version'),
+        "schemas:productID": get_information_value(df=info, row_to_look='Cell ID'),
+        "schemas:dateCreated": str(get_information_value(df=info, row_to_look='Date of cell assembly')),
         "rdfs:comment": {}
     }
 
