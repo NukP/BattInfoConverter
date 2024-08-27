@@ -42,14 +42,30 @@ def get_information_value(df: DataFrame, row_to_look: str, col_to_look: str = "V
 
 def create_jsonld_with_conditions(data_container: ExcelContainer):
     schema = data_container.data['schema']
-    info = data_container.data['info']
     context_toplevel = data_container.data['context_toplevel']
     context_connector = data_container.data['context_connector']
 
+    #Harvest the information for the required section of the schemas
+    ls_info_to_harvest = [
+    "Cell type",
+    "Cell ID",
+    "Date of cell assembly",
+    "Institution/company",
+    "Scientist/technician/operator"
+    ]
+
+    ls_harvested_info = {}
+
+    for field in ls_info_to_harvest:
+        if get_information_value(df=schema, row_to_look=field) is None:
+            raise ValueError(f"Missing information in the schema, please fill in the field '{field}'")
+        else:
+            ls_harvested_info[field] = get_information_value(df=schema, row_to_look=field)
+
     jsonld = {
         "@context": ["https://w3id.org/emmo/domain/battery/context", {}],
-        "@type": get_information_value(df=schema, row_to_look='Cell type'),
-        # "schema:version": get_information_value(df=info, row_to_look='BattINFO CoinCellSchema version'),
+        "@type": ls_harvested_info['Cell type'],
+        "schema:version": get_information_value(df=schema, row_to_look='BattINFO CoinCellSchema version'),
         # "schemas:productID": get_information_value(df=info, row_to_look='Cell ID'),
         # "schemas:dateCreated": str(get_information_value(df=info, row_to_look='Date of cell assembly')),
         "rdfs:comment": {}
@@ -72,7 +88,7 @@ def create_jsonld_with_conditions(data_container: ExcelContainer):
         ontology_path = row['Ontology link'].split('-')
         aux.add_to_structure(jsonld, ontology_path, row['Value'], row['Unit'], data_container)
     jsonld["rdfs:comment"]["BattINFO Converter version"] = APP_VERSION
-    #jsonld["rdfs:comment"]["Software credit"] = f"This JSON-LD was created using Battconverter (https://battinfoconverter.streamlit.app/) version: {APP_VERSION} and the schema version: {jsonld['schema:version']}, this web application was developed at Empa, Swiss Federal Laboratories for Materials Science and Technology in the Laboratory Materials for Energy Conversion lab"
+    jsonld["rdfs:comment"]["Software credit"] = f"This JSON-LD was created using Battconverter (https://battinfoconverter.streamlit.app/) version: {APP_VERSION} and the schema version: {jsonld['schema:version']}, this web application was developed at Empa, Swiss Federal Laboratories for Materials Science and Technology in the Laboratory Materials for Energy Conversion lab"
 
     return jsonld
 
