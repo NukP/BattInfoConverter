@@ -157,7 +157,7 @@ def add_to_structure(jsonld, path, value, unit, data_container):
                     current_level = current_level[-1][next_part]
 
                 if value in unique_id['Item'].values:
-                    unique_id_of_value = get_information_value(unique_id, 'ID', value, "Item") ; plf(value, part)
+                    unique_id_of_value = get_information_value(df=unique_id, row_to_look=value, col_to_look = "ID", col_to_match="Item") ; plf(value, part)
                     if not pd.isna(unique_id_of_value):
                         current_level['@id'] = unique_id_of_value ; plf(value, part)
                     
