@@ -37,6 +37,8 @@ def get_information_value(df: DataFrame, row_to_look: str, col_to_look: str = "V
     Returns:
     str | None: The value from the column col_to_look if a match is found; otherwise, None.
     """
+    if row_to_look.endswith(' '):  # Check if the string ends with a space
+        row_to_look = row_to_look.rstrip(' ')  # Remove only trailing spaces
     result = df.query(f"{col_to_match} == @row_to_look")[col_to_look]
     return result.iloc[0] if not result.empty else None
 
@@ -48,27 +50,52 @@ def create_jsonld_with_conditions(data_container: ExcelContainer):
 
     #Harvest the information for the required section of the schemas
     ls_info_to_harvest = [
-    "Cell type",
-    "Cell ID",
-    "Date of cell assembly",
+    "Cell type", 
+    "Cell ID", 
+    "Date of cell assembly", 
     "Institution/company",
-    "Scientist/technician/operator"
+    "Scientist/technician/operator" 
     ]
 
-    ls_harvested_info = {}
+    dict_harvested_info = {}
 
+    #Harvest the required value from the schema sheet. 
     for field in ls_info_to_harvest:
         if get_information_value(df=schema, row_to_look=field) is np.nan:
             raise ValueError(f"Missing information in the schema, please fill in the field '{field}'")
         else:
-            ls_harvested_info[field] = get_information_value(df=schema, row_to_look=field)
+            dict_harvested_info[field] = get_information_value(df=schema, row_to_look=field)
+
+    #Harvest unique ID value for the required value from the schema sheet.
+    ls_id_info_to_harvest = [ "Institution/company", "Scientist/technician/operator"]
+    dict_harvest_id = {}
+    for id in ls_id_info_to_harvest:
+        try:
+            dict_harvest_id[id] = get_information_value(df=data_container.data['unique_id'],
+                                                        row_to_look=dict_harvested_info[id],
+                                                        col_to_look = "ID",
+                                                        col_to_match="Item")
+            if dict_harvest_id[id] is None:
+                raise ValueError(f"Missing unique ID for the field '{id}'")
+        except:
+            raise ValueError(f"Missing unique ID for the field '{id}'")
 
     jsonld = {
         "@context": ["https://w3id.org/emmo/domain/battery/context", {}],
-        "@type": ls_harvested_info['Cell type'],
+        "@type": dict_harvested_info['Cell type'],
         "schema:version": get_information_value(df=schema, row_to_look='BattINFO CoinCellSchema version'),
-        "schemas:productID": ls_harvested_info['Cell ID'],
-        # "schemas:dateCreated": str(get_information_value(df=info, row_to_look='Date of cell assembly')),
+        "schemas:productID": dict_harvested_info['Cell ID'],
+        "schema:dateCreated": dict_harvested_info['Date of cell assembly'],
+        "schema:creator": {
+                            "@type": "schema:Person",
+                            "@id": dict_harvest_id['Scientist/technician/operator'],
+                            "schema:name": dict_harvested_info['Scientist/technician/operator']
+                            },
+        "schema:manufacturer": {
+                            "@type": "schema:Organization",
+                            "@id": dict_harvest_id['Institution/company'],
+                            "schema:name": dict_harvested_info['Institution/company']
+                            },
         "rdfs:comment": {}
     }
 
