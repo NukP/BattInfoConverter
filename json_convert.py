@@ -4,6 +4,7 @@ import streamlit as st
 import auxiliary as aux 
 import datetime
 from pandas import DataFrame
+import numpy as np
 
 APP_VERSION = "0.6.0"
 
@@ -57,7 +58,7 @@ def create_jsonld_with_conditions(data_container: ExcelContainer):
     ls_harvested_info = {}
 
     for field in ls_info_to_harvest:
-        if get_information_value(df=schema, row_to_look=field) is None:
+        if not get_information_value(df=schema, row_to_look=field) is np.nan:
             raise ValueError(f"Missing information in the schema, please fill in the field '{field}'")
         else:
             ls_harvested_info[field] = get_information_value(df=schema, row_to_look=field)
