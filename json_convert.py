@@ -6,7 +6,7 @@ import datetime
 from pandas import DataFrame
 import numpy as np
 
-APP_VERSION = "0.6.0"
+APP_VERSION = "0.7.0"
 
 @dataclass
 class ExcelContainer:
@@ -20,7 +20,6 @@ class ExcelContainer:
             "unit_map": pd.read_excel(excel_data, 'Ontology - Unit'),
             "context_toplevel": pd.read_excel(excel_data, '@context-TopLevel'),
             "context_connector": pd.read_excel(excel_data, '@context-Connector'),
-            "info": pd.read_excel(excel_data, 'JSON - Info'),
             "unique_id": pd.read_excel(excel_data, 'Unique ID')
         }
 
