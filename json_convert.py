@@ -58,7 +58,7 @@ def create_jsonld_with_conditions(data_container: ExcelContainer):
     ls_harvested_info = {}
 
     for field in ls_info_to_harvest:
-        if not get_information_value(df=schema, row_to_look=field) is np.nan:
+        if get_information_value(df=schema, row_to_look=field) is np.nan:
             raise ValueError(f"Missing information in the schema, please fill in the field '{field}'")
         else:
             ls_harvested_info[field] = get_information_value(df=schema, row_to_look=field)
@@ -67,7 +67,7 @@ def create_jsonld_with_conditions(data_container: ExcelContainer):
         "@context": ["https://w3id.org/emmo/domain/battery/context", {}],
         "@type": ls_harvested_info['Cell type'],
         "schema:version": get_information_value(df=schema, row_to_look='BattINFO CoinCellSchema version'),
-        # "schemas:productID": get_information_value(df=info, row_to_look='Cell ID'),
+        "schemas:productID": ls_harvested_info['Cell ID'],
         # "schemas:dateCreated": str(get_information_value(df=info, row_to_look='Date of cell assembly')),
         "rdfs:comment": {}
     }
