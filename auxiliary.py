@@ -28,9 +28,10 @@ def add_to_structure(jsonld, path, value, unit, data_container):
                     current_level = current_level["@reverse"] ; plf(value, part)
                 if special_command == "type":
                     plf(value, part)                   
-                    current_level['type'] = part ; plf(value, part)
-                    parts = parts[idx + 1] ; plf(value, part)
-                    idx += 1
+                    current_level['type'] = part ; plf(value, part, current_level=current_level)
+                    parts = parts[idx + 1] ; plf(value, part, current_level=current_level)
+                    idx += 1 ; plf(value, part, current_level=current_level)
+                    continue
             else:
                 raise ValueError(f"Invalid JSON-LD at: {parts} in {path}")
             
