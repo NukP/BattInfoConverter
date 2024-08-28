@@ -19,6 +19,7 @@ If you have your custom data schemas (you would like to change what to include i
     __Special Command:__
     - The app supports a special command in the ontology link, which can be specified using `|`. The list of possible special commands and their effects is as follows:
     - **"rev"**: The app will place the ontology link that starts with this special command (along with anything after this) in `"@reverse"`. For example: `-RatedCapacity-rev|hasInput`. Here, `hasInput` will be placed in `"@reverse"`.
+    - **"type"**: The app will place the specific part in the Ontology link in `"@type"`. For example: `hasMeasuredProperty-type|RatedCapacity`, Rated Capacity will be placed in `"@type"` after `hasMeasuredProperty`.
     - If you are using BattInfo as your ontology concept, Dr. Simon Clark (simon.clark@sintef.no) will be happy to assist you.
 
 #### 3. **Adding Any Additional Ontology Top-Level**
